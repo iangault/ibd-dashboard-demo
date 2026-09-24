@@ -1,0 +1,1 @@
+Sitemap: https://iangault.github.io/ibd-dashboard-demo/sitemap.xml

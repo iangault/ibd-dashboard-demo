@@ -1,0 +1,751 @@
+[
+  {
+    "objectID": "eda.html",
+    "href": "eda.html",
+    "title": "Exploratory Analysis",
+    "section": "",
+    "text": "Descriptive visualizations of the data. No formal hypothesis test, no p-value — these document patterns and guide interpretation. Figures are produced by the processing pipeline (make mycobiome, make diet, etc.).\nPosts tagged eda appear here. Hypothesis tests tagged pre-specified appear under Pre-specified Tests.\n\n\n\n\n\n\n\n\n\nParticipant characteristics: missingness audit\n\n\n\neda\n\ncharacteristics\n\n\n\nDescriptive audit of missing values in the cleaned participant characteristics file, including variable-level rates, participant-level burden, and core clinical coverage.\n\n\n\n\n\nJun 16, 2026\n\n\n\n\n\n\n\nMycobiome Identification and Outliers\n\n\n\neda\n\nmycobiome\n\nabundance\n\ndata cleaning\n\n\n\nOutlier filtering, proportion of unidentified taxa, and abundance.\n\n\n\n\n\nJun 8, 2026\n\n\n\n\n\n\n\nDietary exploratory visualizations\n\n\n\neda\n\ndiet\n\n\n\nDescriptive dietary figures covering nutrient correlations, scaled distributions, study-group KDEs, and participant deficiency scores.\n\n\n\n\n\nJun 1, 2026\n\n\n\n\n\n\n\nFungal taxonomic abundance heatmaps\n\n\n\nheatmap\n\nabundance\n\neda\n\nmycobiome\n\n\n\nZ-score heatmaps of fungal abundance across phylum, family, genus, and species levels by study group.\n\n\n\n\n\nMay 26, 2026\n\n\n\n\n\nNo matching items"
+  },
+  {
+    "objectID": "posts/2026-05-19-permanova-family-beta-diversity/index.html",
+    "href": "posts/2026-05-19-permanova-family-beta-diversity/index.html",
+    "title": "PERMANOVA family beta diversity by study group",
+    "section": "",
+    "text": "Does study group explain differences in family-level community composition?\nNull: Multivariate centroids do not differ among study groups (PERMANOVA on Bray–Curtis distances)."
+  },
+  {
+    "objectID": "posts/2026-05-19-permanova-family-beta-diversity/index.html#research-question",
+    "href": "posts/2026-05-19-permanova-family-beta-diversity/index.html#research-question",
+    "title": "PERMANOVA family beta diversity by study group",
+    "section": "",
+    "text": "Does study group explain differences in family-level community composition?\nNull: Multivariate centroids do not differ among study groups (PERMANOVA on Bray–Curtis distances)."
+  },
+  {
+    "objectID": "posts/2026-05-19-permanova-family-beta-diversity/index.html#data",
+    "href": "posts/2026-05-19-permanova-family-beta-diversity/index.html#data",
+    "title": "PERMANOVA family beta diversity by study group",
+    "section": "2 Data",
+    "text": "2 Data\n\nResponse: Family relative abundance (f__* columns after wide reshape).\nPredictor: Study_group_new.\nInput: data/processed/family.csv (long format from make save; pivoted in this post)."
+  },
+  {
+    "objectID": "posts/2026-05-19-permanova-family-beta-diversity/index.html#methods",
+    "href": "posts/2026-05-19-permanova-family-beta-diversity/index.html#methods",
+    "title": "PERMANOVA family beta diversity by study group",
+    "section": "3 Methods",
+    "text": "3 Methods\n\n\n\nItem\nChoice\n\n\n\n\nTest\nPERMANOVA (vegan::adonis2)\n\n\nDistance\nBray–Curtis\n\n\nFormula\ndist ~ Study_group_new\n\n\nPermutations\n999\n\n\nVisualization\nPCoA (cmdscale, k = 2), 95% ellipses"
+  },
+  {
+    "objectID": "posts/2026-05-19-permanova-family-beta-diversity/index.html#results",
+    "href": "posts/2026-05-19-permanova-family-beta-diversity/index.html#results",
+    "title": "PERMANOVA family beta diversity by study group",
+    "section": "4 Results",
+    "text": "4 Results\n\n\n\n\n\nTerm\nDf\nSum of squares\nR²\nF\nPr(&gt;F)\n\n\n\n\nModel\n2\n0.2570\n0.1422\n1.0773\n0.373\n\n\nResidual\n13\n1.5505\n0.8578\nNA\nNA\n\n\nTotal\n15\n1.8075\n1.0000\nNA\nNA\n\n\n\n\n\nStudy group explained 14.2% of variance in Family composition (R² = 0.142; pseudo-F = 1.08; p = 0.3730, 999 permutations)."
+  },
+  {
+    "objectID": "posts/2026-05-19-permanova-family-beta-diversity/index.html#figure",
+    "href": "posts/2026-05-19-permanova-family-beta-diversity/index.html#figure",
+    "title": "PERMANOVA family beta diversity by study group",
+    "section": "5 Figure",
+    "text": "5 Figure\n\n\nShow code\nplot_pcoa_study_group(\n  fit$dist,\n  fit$metadata,\n  permanova_result,\n  cfg$label\n)\n\n\n\n\n\n\n\n\nFigure 1: PCoA of family Bray–Curtis dissimilarity by study group."
+  },
+  {
+    "objectID": "posts/2026-05-19-permanova-family-beta-diversity/index.html#reproducibility",
+    "href": "posts/2026-05-19-permanova-family-beta-diversity/index.html#reproducibility",
+    "title": "PERMANOVA family beta diversity by study group",
+    "section": "6 Reproducibility",
+    "text": "6 Reproducibility\n\nHelpers: stats/R/permanova_helpers.R\nPipeline: make wrangle → make save"
+  },
+  {
+    "objectID": "posts/2026-05-19-alpha-diversity-kruskal-wallis/index.html",
+    "href": "posts/2026-05-19-alpha-diversity-kruskal-wallis/index.html",
+    "title": "Kruskal–Wallis alpha diversity by study group and fibre restriction",
+    "section": "",
+    "text": "Do alpha diversity metrics differ across study group?\nDo they differ across fibre restriction level (None, Low, Mid, High)?\n\nNull (each metric): Distributions are equal across groups."
+  },
+  {
+    "objectID": "posts/2026-05-19-alpha-diversity-kruskal-wallis/index.html#research-question",
+    "href": "posts/2026-05-19-alpha-diversity-kruskal-wallis/index.html#research-question",
+    "title": "Kruskal–Wallis alpha diversity by study group and fibre restriction",
+    "section": "",
+    "text": "Do alpha diversity metrics differ across study group?\nDo they differ across fibre restriction level (None, Low, Mid, High)?\n\nNull (each metric): Distributions are equal across groups."
+  },
+  {
+    "objectID": "posts/2026-05-19-alpha-diversity-kruskal-wallis/index.html#data",
+    "href": "posts/2026-05-19-alpha-diversity-kruskal-wallis/index.html#data",
+    "title": "Kruskal–Wallis alpha diversity by study group and fibre restriction",
+    "section": "2 Data",
+    "text": "2 Data\n\nResponse: Value (alpha diversity metric).\nPredictors: Study_group_new, Fiber_restriction.\nUnit: Sample (one row per sample × metric in long format).\nInput: data/intermediate/alpha_long.rds (from make wrangle).\nPre-specified script: src/mycobiome/03b_diversity_stats.R."
+  },
+  {
+    "objectID": "posts/2026-05-19-alpha-diversity-kruskal-wallis/index.html#methods",
+    "href": "posts/2026-05-19-alpha-diversity-kruskal-wallis/index.html#methods",
+    "title": "Kruskal–Wallis alpha diversity by study group and fibre restriction",
+    "section": "3 Methods",
+    "text": "3 Methods\n\n\n\n\n\n\n\nItem\nChoice\n\n\n\n\nTest\nKruskal–Wallis (rstatix::kruskal_test)\n\n\nStratification\nOne test per Diversity_metric (group_by(Diversity_metric))\n\n\nFormulae\nValue ~ Study_group_new; Value ~ Fiber_restriction\n\n\nPost-hoc\nNot run in pipeline (Dunn + BH commented in stool_eda.Rmd)\n\n\nSignificance\nα = 0.05 (uncorrected across metrics)\n\n\n\n\n\nShow code\nkw_diversity_group &lt;- alpha_long |&gt;\n  group_by(Diversity_metric) |&gt;\n  kruskal_test(Value ~ Study_group_new)\n\nkw_diversity_fibre &lt;- alpha_long |&gt;\n  group_by(Diversity_metric) |&gt;\n  kruskal_test(Value ~ Fiber_restriction)"
+  },
+  {
+    "objectID": "posts/2026-05-19-alpha-diversity-kruskal-wallis/index.html#assumptions-and-diagnostics",
+    "href": "posts/2026-05-19-alpha-diversity-kruskal-wallis/index.html#assumptions-and-diagnostics",
+    "title": "Kruskal–Wallis alpha diversity by study group and fibre restriction",
+    "section": "4 Assumptions and diagnostics",
+    "text": "4 Assumptions and diagnostics\n\nKruskal–Wallis compares distributions (rank-based); does not assume normality.\nIndependence: assumed for samples; repeated measures per participant not modelled here.\nMultiple metrics: several diversity indices tested; consider FDR if reporting many metrics together."
+  },
+  {
+    "objectID": "posts/2026-05-19-alpha-diversity-kruskal-wallis/index.html#results",
+    "href": "posts/2026-05-19-alpha-diversity-kruskal-wallis/index.html#results",
+    "title": "Kruskal–Wallis alpha diversity by study group and fibre restriction",
+    "section": "5 Results",
+    "text": "5 Results\n\n5.1 By study group\n\n\n\n\n\nDiversity_metric\n.y.\nn\nstatistic\ndf\np\nmethod\n\n\n\n\nChao1\nValue\n16\n1.4941\n2\n0.474\nKruskal-Wallis\n\n\nShannon\nValue\n16\n3.5103\n2\n0.173\nKruskal-Wallis\n\n\nSimpson\nValue\n16\n1.4412\n2\n0.486\nKruskal-Wallis\n\n\n\n\n\n\n\n5.2 By fibre restriction\n\n\n\n\n\nDiversity_metric\n.y.\nn\nstatistic\ndf\np\nmethod\n\n\n\n\nChao1\nValue\n16\n2.1346\n3\n0.545\nKruskal-Wallis\n\n\nShannon\nValue\n16\n1.4463\n3\n0.695\nKruskal-Wallis\n\n\nSimpson\nValue\n16\n1.1926\n3\n0.755\nKruskal-Wallis\n\n\n\n\n\nSignificant by study group (p &lt; 0.05): none\nSignificant by fibre restriction (p &lt; 0.05): none"
+  },
+  {
+    "objectID": "posts/2026-05-19-alpha-diversity-kruskal-wallis/index.html#figure",
+    "href": "posts/2026-05-19-alpha-diversity-kruskal-wallis/index.html#figure",
+    "title": "Kruskal–Wallis alpha diversity by study group and fibre restriction",
+    "section": "6 Figure",
+    "text": "6 Figure\nBoxplots of alpha diversity by study group (one panel per metric).\n\n\nShow code\np_group &lt;- ggplot(\n  alpha_long,\n  aes(x = Study_group_new, y = Value, fill = Study_group_new)\n) +\n  geom_boxplot(outlier.shape = NA, alpha = 0.85) +\n  geom_jitter(width = 0.15, alpha = 0.5, size = 1) +\n  facet_wrap(~ Diversity_metric, scales = \"free_y\") +\n  labs(\n    x = NULL,\n    y = \"Alpha diversity value\",\n    fill = \"Study group\"\n  ) +\n  theme_minimal() +\n  theme(\n    legend.position = \"none\",\n    axis.text.x = element_text(angle = 25, hjust = 1)\n  )\np_group\n\n\n\n\n\n\n\n\nFigure 1: Alpha diversity by study group. Kruskal–Wallis p-values are in the results tables above.\n\n\n\n\n\n\n\nShow code\np_fibre &lt;- ggplot(\n  alpha_long,\n  aes(x = Fiber_restriction, y = Value, fill = Fiber_restriction)\n) +\n  geom_boxplot(outlier.shape = NA, alpha = 0.85) +\n  geom_jitter(width = 0.15, alpha = 0.5, size = 1) +\n  facet_wrap(~ Diversity_metric, scales = \"free_y\") +\n  labs(\n    x = NULL,\n    y = \"Alpha diversity value\",\n    fill = \"Fibre Restriction\",\n    title = \"Alpha diversity by fibre restricted diets\"\n  ) +\n  theme_minimal() +\n  theme(\n    legend.position = \"none\",\n    axis.text.x = element_text(angle = 25, hjust = 1)\n  )\np_fibre\n\n\n\n\n\n\n\n\nFigure 2: Alpha diversity by fibre restrictive diet. Kruskal–Wallis p-values are in the results tables above."
+  },
+  {
+    "objectID": "posts/2026-05-19-alpha-diversity-kruskal-wallis/index.html#interpretation",
+    "href": "posts/2026-05-19-alpha-diversity-kruskal-wallis/index.html#interpretation",
+    "title": "Kruskal–Wallis alpha diversity by study group and fibre restriction",
+    "section": "7 Interpretation",
+    "text": "7 Interpretation\nSignificant Kruskal–Wallis results indicate at least one group differs in distribution for that metric; they do not identify which pairs differ. Use Dunn tests (with multiplicity adjustment) in a follow-up post if needed."
+  },
+  {
+    "objectID": "posts/2026-05-19-alpha-diversity-kruskal-wallis/index.html#reproducibility",
+    "href": "posts/2026-05-19-alpha-diversity-kruskal-wallis/index.html#reproducibility",
+    "title": "Kruskal–Wallis alpha diversity by study group and fibre restriction",
+    "section": "8 Reproducibility",
+    "text": "8 Reproducibility\n\nNotebook: notebooks/stool_eda.Rmd (§ Inference)\nMakefile target: make diversity-stats"
+  },
+  {
+    "objectID": "posts/2026-05-22-symptoms-fungal-composition/index.html",
+    "href": "posts/2026-05-22-symptoms-fungal-composition/index.html",
+    "title": "Symptom scores vs fungal composition (Spearman and PERMANOVA)",
+    "section": "",
+    "text": "Are symptom scores from participant surveys associated with fungal composition (alpha and beta diversity)?\nNull (Spearman): No monotonic association between each symptom score and each alpha diversity metric.\nNull (PERMANOVA): Genus-level community composition is not associated with the symptom score after accounting for Bray–Curtis distance structure."
+  },
+  {
+    "objectID": "posts/2026-05-22-symptoms-fungal-composition/index.html#research-question",
+    "href": "posts/2026-05-22-symptoms-fungal-composition/index.html#research-question",
+    "title": "Symptom scores vs fungal composition (Spearman and PERMANOVA)",
+    "section": "",
+    "text": "Are symptom scores from participant surveys associated with fungal composition (alpha and beta diversity)?\nNull (Spearman): No monotonic association between each symptom score and each alpha diversity metric.\nNull (PERMANOVA): Genus-level community composition is not associated with the symptom score after accounting for Bray–Curtis distance structure."
+  },
+  {
+    "objectID": "posts/2026-05-22-symptoms-fungal-composition/index.html#data",
+    "href": "posts/2026-05-22-symptoms-fungal-composition/index.html#data",
+    "title": "Symptom scores vs fungal composition (Spearman and PERMANOVA)",
+    "section": "2 Data",
+    "text": "2 Data\n\n\n\n\n\n\n\nRole\nSource\n\n\n\n\nMycobiome (alpha)\ndata/intermediate/alpha_long.rds (make wrangle)\n\n\nMycobiome (genus beta)\ndata/processed/genus.csv (make save)\n\n\nSurvey / symptoms\ndata/processed/cleaned_characteristics.csv (make characteristics on data/raw/SYN_Participant Characteristics(Sheet1).csv)\n\n\n\n\nUnit of analysis: Stool sample (16 samples, 12 participants with mycobiome data).\nJoin key: Participant_ID (mycobiome) = participant_id (characteristics); one characteristics row per participant used when duplicates exist.\nSymptom scores: Numeric fields and ordinally coded items parsed to numbers (e.g. Mild = 1, 4\\tSOME OF THE TIME → 4). Primary focus: Harvey–Bradshaw Index (HBI); additional exploratory symptoms in the correlation table.\nInclusion: Samples retained after 02_data_wrangling.R removals; PERMANOVA genus analysis uses samples with non-missing HBI.\n\nCoverage: 16 samples, 12 participants; 16 samples with non-missing HBI."
+  },
+  {
+    "objectID": "posts/2026-05-22-symptoms-fungal-composition/index.html#methods",
+    "href": "posts/2026-05-22-symptoms-fungal-composition/index.html#methods",
+    "title": "Symptom scores vs fungal composition (Spearman and PERMANOVA)",
+    "section": "3 Methods",
+    "text": "3 Methods\n\n\n\n\n\n\n\n\nItem\nSpearman (symptoms × alpha)\nPERMANOVA (symptoms × taxa)\n\n\n\n\nTest\nSpearman rank correlation (cor.test, method = \"spearman\")\nvegan::adonis2\n\n\nResponse\nShannon, Simpson, Chao1\nGenus Bray–Curtis dissimilarity\n\n\nPredictor\nParsed symptom scores\nHarvey–Bradshaw Index (continuous)\n\n\nMultiple testing\nBenjamini–Hochberg across all symptom × metric pairs\nExploratory single predictor\n\n\nPermutations\n—\n999\n\n\nSignificance\nα = 0.05\nα = 0.05\n\n\n\n\n\nShow code\nspearman_results &lt;- spearman_symptom_alpha(sample_symptoms)\n\npermanova_hbi &lt;- run_permanova_symptom(\n  genus_wide,\n  prefix = TAXA_LEVELS$genus$prefix,\n  symptom_col = \"harvey_bradshaw_index\"\n)"
+  },
+  {
+    "objectID": "posts/2026-05-22-symptoms-fungal-composition/index.html#assumptions-and-diagnostics",
+    "href": "posts/2026-05-22-symptoms-fungal-composition/index.html#assumptions-and-diagnostics",
+    "title": "Symptom scores vs fungal composition (Spearman and PERMANOVA)",
+    "section": "4 Assumptions and diagnostics",
+    "text": "4 Assumptions and diagnostics\n\nIndependence: Samples are not fully independent (up to two stool replicates per participant). Results are exploratory; consider participant-level sensitivity analyses if reporting formally.\nSpearman: Tests monotonic association; does not assume linearity or normality.\nPERMANOVA: Exchangeability under permutations; composition constrained to genus relative abundance (Bray–Curtis).\nMissing symptoms: HBI and other scores are not available for all participants (see coverage above)."
+  },
+  {
+    "objectID": "posts/2026-05-22-symptoms-fungal-composition/index.html#results",
+    "href": "posts/2026-05-22-symptoms-fungal-composition/index.html#results",
+    "title": "Symptom scores vs fungal composition (Spearman and PERMANOVA)",
+    "section": "5 Results",
+    "text": "5 Results\n\n5.1 Spearman: symptom scores × alpha diversity\n\n\n\n\n\n\n\n\n\n\n\n\n\nSymptom\nAlpha metric\nn\nSpearman rho\np\nBH-adjusted p\n\n\n\n\nHarvey-Bradshaw Index\nShannon\n16\n-0.4543\n0.0771\n0.6620\n\n\nHarvey-Bradshaw Index\nSimpson\n16\n0.2331\n0.3849\n0.7339\n\n\nHarvey-Bradshaw Index\nChao1\n16\n0.3595\n0.1715\n0.6620\n\n\nDaily soft stools\nShannon\n16\n0.2205\n0.4118\n0.7339\n\n\nDaily soft stools\nSimpson\n16\n-0.0214\n0.9372\n0.9406\n\n\nDaily soft stools\nChao1\n16\n-0.2757\n0.3014\n0.6782\n\n\nAbdominal pain\nShannon\n16\n-0.3009\n0.2574\n0.6620\n\n\nAbdominal pain\nSimpson\n16\n-0.0203\n0.9406\n0.9406\n\n\nAbdominal pain\nChao1\n16\n-0.0483\n0.8589\n0.9406\n\n\nFatigue frequency\nShannon\n16\n0.3156\n0.2337\n0.6620\n\n\nFatigue frequency\nSimpson\n16\n-0.1593\n0.5556\n0.7339\n\n\nFatigue frequency\nChao1\n16\n-0.1683\n0.5332\n0.7339\n\n\nAnxiety frequency\nShannon\n16\n-0.0932\n0.7314\n0.8777\n\n\nAnxiety frequency\nSimpson\n16\n0.1533\n0.5708\n0.7339\n\n\nAnxiety frequency\nChao1\n16\n-0.3367\n0.2023\n0.6620\n\n\nAbdominal bloating frequency\nShannon\n16\n-0.1894\n0.4824\n0.7339\n\n\nAbdominal bloating frequency\nSimpson\n16\n-0.3277\n0.2154\n0.6620\n\n\nAbdominal bloating frequency\nChao1\n16\n0.3848\n0.1411\n0.6620\n\n\n\n\n\nNo symptom × alpha pairs were significant after BH adjustment (q &lt; 0.05).\n\n\n5.2 PERMANOVA: genus composition ~ HBI\n\n\n\n\n\nTerm\nDf\nSum of squares\nR²\nF\nPr(&gt;F)\n\n\n\n\nModel\n1\n0.1006\n0.059\n0.8786\n0.658\n\n\nResidual\n14\n1.6035\n0.941\nNA\nNA\n\n\nTotal\n15\n1.7041\n1.000\nNA\nNA\n\n\n\n\n\nHarvey–Bradshaw Index explained 5.9% of variance in genus composition (R² = 0.059; pseudo-F = 0.88; p = 0.6580, 999 permutations; n = 16 samples with HBI)."
+  },
+  {
+    "objectID": "posts/2026-05-22-symptoms-fungal-composition/index.html#figures",
+    "href": "posts/2026-05-22-symptoms-fungal-composition/index.html#figures",
+    "title": "Symptom scores vs fungal composition (Spearman and PERMANOVA)",
+    "section": "6 Figures",
+    "text": "6 Figures\n\n6.1 HBI vs Shannon diversity (Spearman)\n\n\nShow code\nplot_symptom_alpha_scatter(\n  sample_symptoms,\n  symptom_col = \"harvey_bradshaw_index\",\n  metric = \"Shannon\"\n)\n\n\n\n\n\n\n\n\nFigure 1: Harvey–Bradshaw Index vs Shannon diversity by study group. Subtitle shows Spearman correlation across samples with complete data.\n\n\n\n\n\n\n\n6.2 Genus PCoA coloured by HBI (PERMANOVA)\n\n\nShow code\nplot_pcoa_symptom(\n  permanova_hbi,\n  TAXA_LEVELS$genus$label\n)\n\n\n\n\n\n\n\n\nFigure 2: PCoA of genus Bray–Curtis dissimilarity; points coloured by Harvey–Bradshaw Index."
+  },
+  {
+    "objectID": "posts/2026-05-22-symptoms-fungal-composition/index.html#interpretation",
+    "href": "posts/2026-05-22-symptoms-fungal-composition/index.html#interpretation",
+    "title": "Symptom scores vs fungal composition (Spearman and PERMANOVA)",
+    "section": "7 Interpretation",
+    "text": "7 Interpretation\nSpearman correlations describe pairwise monotonic links between symptom scores and alpha metrics at the sample level; they do not adjust for repeated measures per participant. PERMANOVA tests whether multivariate genus composition covaries with HBI across samples; a non-significant p-value does not rule out associations with individual taxa or other symptom instruments.\nCorrelation among symptoms and small sample size limit power; treat findings as exploratory unless pre-registered."
+  },
+  {
+    "objectID": "posts/2026-05-22-symptoms-fungal-composition/index.html#reproducibility",
+    "href": "posts/2026-05-22-symptoms-fungal-composition/index.html#reproducibility",
+    "title": "Symptom scores vs fungal composition (Spearman and PERMANOVA)",
+    "section": "8 Reproducibility",
+    "text": "8 Reproducibility\n\nHelpers: stats/R/symptom_association_helpers.R, stats/R/permanova_helpers.R\nOptional merged table: make merge builds data/processed/merged.csv for dashboard use; this post joins the same sources directly.\nRender: quarto render stats from repository root"
+  },
+  {
+    "objectID": "posts/2026-05-19-permanova-genus-beta-diversity/index.html",
+    "href": "posts/2026-05-19-permanova-genus-beta-diversity/index.html",
+    "title": "PERMANOVA genus beta diversity by study group",
+    "section": "",
+    "text": "Does study group explain differences in genus-level community composition?\nNull: Multivariate centroids do not differ among study groups (PERMANOVA on Bray–Curtis distances)."
+  },
+  {
+    "objectID": "posts/2026-05-19-permanova-genus-beta-diversity/index.html#research-question",
+    "href": "posts/2026-05-19-permanova-genus-beta-diversity/index.html#research-question",
+    "title": "PERMANOVA genus beta diversity by study group",
+    "section": "",
+    "text": "Does study group explain differences in genus-level community composition?\nNull: Multivariate centroids do not differ among study groups (PERMANOVA on Bray–Curtis distances)."
+  },
+  {
+    "objectID": "posts/2026-05-19-permanova-genus-beta-diversity/index.html#data",
+    "href": "posts/2026-05-19-permanova-genus-beta-diversity/index.html#data",
+    "title": "PERMANOVA genus beta diversity by study group",
+    "section": "2 Data",
+    "text": "2 Data\n\nResponse: Genus relative abundance (g__* columns after wide reshape).\nPredictor: Study_group_new.\nInput: data/processed/genus.csv (long format from make save; pivoted in this post)."
+  },
+  {
+    "objectID": "posts/2026-05-19-permanova-genus-beta-diversity/index.html#methods",
+    "href": "posts/2026-05-19-permanova-genus-beta-diversity/index.html#methods",
+    "title": "PERMANOVA genus beta diversity by study group",
+    "section": "3 Methods",
+    "text": "3 Methods\n\n\n\nItem\nChoice\n\n\n\n\nTest\nPERMANOVA (vegan::adonis2)\n\n\nDistance\nBray–Curtis\n\n\nFormula\ndist ~ Study_group_new\n\n\nPermutations\n999\n\n\nVisualization\nPCoA (cmdscale, k = 2), 95% ellipses"
+  },
+  {
+    "objectID": "posts/2026-05-19-permanova-genus-beta-diversity/index.html#results",
+    "href": "posts/2026-05-19-permanova-genus-beta-diversity/index.html#results",
+    "title": "PERMANOVA genus beta diversity by study group",
+    "section": "4 Results",
+    "text": "4 Results\n\n\n\n\n\nTerm\nDf\nSum of squares\nR²\nF\nPr(&gt;F)\n\n\n\n\nModel\n2\n0.1846\n0.1083\n0.7896\n0.852\n\n\nResidual\n13\n1.5195\n0.8917\nNA\nNA\n\n\nTotal\n15\n1.7041\n1.0000\nNA\nNA\n\n\n\n\n\nStudy group explained 10.8% of variance in Genus composition (R² = 0.108; pseudo-F = 0.79; p = 0.8520, 999 permutations)."
+  },
+  {
+    "objectID": "posts/2026-05-19-permanova-genus-beta-diversity/index.html#figure",
+    "href": "posts/2026-05-19-permanova-genus-beta-diversity/index.html#figure",
+    "title": "PERMANOVA genus beta diversity by study group",
+    "section": "5 Figure",
+    "text": "5 Figure\n\n\nShow code\nplot_pcoa_study_group(\n  fit$dist,\n  fit$metadata,\n  permanova_result,\n  cfg$label\n)\n\n\n\n\n\n\n\n\nFigure 1: PCoA of genus Bray–Curtis dissimilarity by study group."
+  },
+  {
+    "objectID": "posts/2026-05-19-permanova-genus-beta-diversity/index.html#reproducibility",
+    "href": "posts/2026-05-19-permanova-genus-beta-diversity/index.html#reproducibility",
+    "title": "PERMANOVA genus beta diversity by study group",
+    "section": "6 Reproducibility",
+    "text": "6 Reproducibility\n\nHelpers: stats/R/permanova_helpers.R\nPipeline: make wrangle → make save"
+  },
+  {
+    "objectID": "posts/2026-05-29-diet-mycobiome-pca-clustering/index.html",
+    "href": "posts/2026-05-29-diet-mycobiome-pca-clustering/index.html",
+    "title": "PCA and clustering on combined diet and mycobiome profiles",
+    "section": "",
+    "text": "Can participants be grouped by combined diet (nutrients) and mycobiome (genus taxa) profiles?\nPre-specified method; exploratory interpretation: with 12 participants, PCA and clustering describe patterns in the data but do not provide stable cluster validation (no formal cluster significance testing)."
+  },
+  {
+    "objectID": "posts/2026-05-29-diet-mycobiome-pca-clustering/index.html#research-question",
+    "href": "posts/2026-05-29-diet-mycobiome-pca-clustering/index.html#research-question",
+    "title": "PCA and clustering on combined diet and mycobiome profiles",
+    "section": "",
+    "text": "Can participants be grouped by combined diet (nutrients) and mycobiome (genus taxa) profiles?\nPre-specified method; exploratory interpretation: with 12 participants, PCA and clustering describe patterns in the data but do not provide stable cluster validation (no formal cluster significance testing)."
+  },
+  {
+    "objectID": "posts/2026-05-29-diet-mycobiome-pca-clustering/index.html#data",
+    "href": "posts/2026-05-29-diet-mycobiome-pca-clustering/index.html#data",
+    "title": "PCA and clustering on combined diet and mycobiome profiles",
+    "section": "2 Data",
+    "text": "2 Data\n\n\n\nRole\nSource\n\n\n\n\nGenus taxa\ndata/processed/genus.csv (make save)\n\n\nDiet\ndata/processed/dietary_cleaned.xlsx\n\n\nDisease group (reference)\nStudy_group_new on mycobiome metadata\n\n\n\n\nUnit of analysis: Participant (one row per Participant_ID).\nMycobiome: Mean genus relative abundance across stool samples per participant.\nDiet: Mean nutrient intake across diary days per participant (same as merge_files.R).\nFeatures: Panel of nutrients from NUTRIENT_FIELDS plus all genus columns (g__*) with non-zero variance across participants.\nPreprocessing: Features are centered and scaled before PCA and clustering.\n\nCoverage: 12 participants, 51 features (11 nutrients + 40 genera)."
+  },
+  {
+    "objectID": "posts/2026-05-29-diet-mycobiome-pca-clustering/index.html#methods",
+    "href": "posts/2026-05-29-diet-mycobiome-pca-clustering/index.html#methods",
+    "title": "PCA and clustering on combined diet and mycobiome profiles",
+    "section": "3 Methods",
+    "text": "3 Methods\n\n\n\n\n\n\n\nItem\nChoice\n\n\n\n\nIntegration\nLeft-join participant-mean genus abundances and nutrients on Participant_ID\n\n\nPCA\nstats::prcomp, center = TRUE, scale. = TRUE\n\n\nClustering\nHierarchical (Ward.D2) on Euclidean distance of scaled features\n\n\nCluster sizes\nk = 2 and k = 3 (cutree)\n\n\nReference labels\nStudy_group_new overlaid on PCA (not used to fit clusters)\n\n\nNotebook reference\nnotebooks/pca_tsne.Rmd (taxa-only PCA/t-SNE)\n\n\n\n\n\nShow code\n# Results objects created in setup: pca_fit, cluster_fit, scores"
+  },
+  {
+    "objectID": "posts/2026-05-29-diet-mycobiome-pca-clustering/index.html#assumptions-and-diagnostics",
+    "href": "posts/2026-05-29-diet-mycobiome-pca-clustering/index.html#assumptions-and-diagnostics",
+    "title": "PCA and clustering on combined diet and mycobiome profiles",
+    "section": "4 Assumptions and diagnostics",
+    "text": "4 Assumptions and diagnostics\n\nSample size: 12 participants; PCA axes and clusters are unstable and sensitive to outliers.\nScale: Nutrients (g, kcal, mg) and compositional genus proportions are jointly z-scored; relative weighting is arbitrary but standard for integrated PCA.\nCompositional data: Genus abundances are not CLR-transformed here; results complement Bray–Curtis / PERMANOVA analyses on taxa alone.\nIndependence: Technical stool replicates are averaged before analysis."
+  },
+  {
+    "objectID": "posts/2026-05-29-diet-mycobiome-pca-clustering/index.html#results",
+    "href": "posts/2026-05-29-diet-mycobiome-pca-clustering/index.html#results",
+    "title": "PCA and clustering on combined diet and mycobiome profiles",
+    "section": "5 Results",
+    "text": "5 Results\n\n5.1 Variance explained\n\n\n\n\n\nPC\nComponent\nVariance (%)\nCumulative (%)\n\n\n\n\nPC1\n1\n16.08\n16.08\n\n\nPC2\n2\n14.71\n30.79\n\n\nPC3\n3\n12.25\n43.04\n\n\nPC4\n4\n11.66\n54.71\n\n\nPC5\n5\n9.85\n64.56\n\n\nPC6\n6\n8.72\n73.28\n\n\nPC7\n7\n7.88\n81.16\n\n\nPC8\n8\n6.61\n87.76\n\n\nPC9\n9\n5.18\n92.94\n\n\nPC10\n10\n3.85\n96.80\n\n\n\n\n\nPC1 and PC2 explain 16.1% and 14.7% of variance (cumulative PC1–3: 43.0%).\n\n\n5.2 Clusters vs study group\n\n\n\nParticipant counts: hierarchical clusters (k = 2) vs study group\n\n\ncluster\nActive IBD\nNon-IBD\nQuiescent\n\n\n\n\n1\n3\n4\n2\n\n\n2\n1\n0\n2\n\n\n\n\n\n\n\n\nParticipant counts: hierarchical clusters (k = 3) vs study group\n\n\ncluster\nActive IBD\nNon-IBD\nQuiescent\n\n\n\n\n1\n2\n3\n2\n\n\n2\n1\n0\n2\n\n\n3\n1\n1\n0\n\n\n\n\n\nClusters are unsupervised and need not align with clinical study group. Compare tables and PCA colours to see whether diet–mycobiome structure tracks disease status or forms separate groupings."
+  },
+  {
+    "objectID": "posts/2026-05-29-diet-mycobiome-pca-clustering/index.html#figures",
+    "href": "posts/2026-05-29-diet-mycobiome-pca-clustering/index.html#figures",
+    "title": "PCA and clustering on combined diet and mycobiome profiles",
+    "section": "6 Figures",
+    "text": "6 Figures\n\n6.1 Cumulative variance (scree)\n\n\nShow code\nplot_pca_variance(pca_fit$variance_df, max_pc = min(10L, n_participants))\n\n\n\n\n\n\n\n\nFigure 1: Cumulative proportion of variance explained by principal components.\n\n\n\n\n\n\n\n6.2 PCA scores (PC1 vs PC2)\n\n\nShow code\nplot_pca_scores(\n  scores,\n  colour_col = \"Study_group_new\",\n  variance_df = pca_fit$variance_df,\n  title = NULL\n)\n\n\n\n\n\n\n\n\nFigure 2: PCA of combined nutrient and genus features. Points are participants; colour is study group.\n\n\n\n\n\n\n\n6.3 PCA with hierarchical clusters (k = 2)\n\n\nShow code\nplot_pca_scores(\n  scores,\n  colour_col = \"Study_group_new\",\n  shape_col = \"k2\",\n  variance_df = pca_fit$variance_df,\n  title = \"PCA with hierarchical clusters (k = 2)\"\n)\n\n\n\n\n\n\n\n\nFigure 3: Same PCA space with point shape indicating Ward clusters (k = 2).\n\n\n\n\n\n\n\n6.4 Top PC1 loadings\n\n\nShow code\nplot_top_pca_loadings(pca_fit$loadings, pc = \"PC1\", n_top = 10L)\n\n\n\n\n\n\n\n\nFigure 4: Features with largest absolute loadings on PC1 (nutrients and genera).\n\n\n\n\n\n\n\n6.5 Clustering dendrogram\n\n\nShow code\nplot_cluster_dendrogram(cluster_fit)\n\n\n\n\n\n\n\n\nFigure 5: Ward hierarchical clustering dendrogram on scaled diet + genus features (participant IDs as leaves)."
+  },
+  {
+    "objectID": "posts/2026-05-29-diet-mycobiome-pca-clustering/index.html#interpretation",
+    "href": "posts/2026-05-29-diet-mycobiome-pca-clustering/index.html#interpretation",
+    "title": "PCA and clustering on combined diet and mycobiome profiles",
+    "section": "7 Interpretation",
+    "text": "7 Interpretation\nPCA reduces the joint nutrient + genus feature space to orthogonal axes for visualization. If participants with similar diets and mycobiomes sit near each other, they may form visual groups; formal cluster validity was not assessed (silhouette, gap statistic, etc.) given small n.\nHierarchical clusters partition participants without using Study_group_new. Agreement between clusters and clinical group supports an integrated diet–mycobiome signal; disagreement suggests heterogeneity within disease labels or driven by diet/taxa not captured by group alone."
+  },
+  {
+    "objectID": "posts/2026-05-29-diet-mycobiome-pca-clustering/index.html#reproducibility",
+    "href": "posts/2026-05-29-diet-mycobiome-pca-clustering/index.html#reproducibility",
+    "title": "PCA and clustering on combined diet and mycobiome profiles",
+    "section": "8 Reproducibility",
+    "text": "8 Reproducibility\n\nHelpers: stats/R/pca_clustering_helpers.R, stats/R/nutrient_association_helpers.R, stats/R/permanova_helpers.R\nNotebook: notebooks/pca_tsne.Rmd (taxa-only PCA/t-SNE)\nRender: quarto render stats from repository root"
+  },
+  {
+    "objectID": "posts/2026-06-01-dietary-eda/index.html",
+    "href": "posts/2026-06-01-dietary-eda/index.html",
+    "title": "Dietary exploratory visualizations",
+    "section": "",
+    "text": "This post collects descriptive dietary figures generated from the cleaned dietary dataset. These are exploratory visuals only: they summarize structure, spread, and cohort patterns without hypothesis testing.\n\nFigures generated by src/diet/dietary.R and the dietary EDA scripts via make dietary."
+  },
+  {
+    "objectID": "posts/2026-06-01-dietary-eda/index.html#overview",
+    "href": "posts/2026-06-01-dietary-eda/index.html#overview",
+    "title": "Dietary exploratory visualizations",
+    "section": "",
+    "text": "This post collects descriptive dietary figures generated from the cleaned dietary dataset. These are exploratory visuals only: they summarize structure, spread, and cohort patterns without hypothesis testing.\n\nFigures generated by src/diet/dietary.R and the dietary EDA scripts via make dietary."
+  },
+  {
+    "objectID": "posts/2026-06-01-dietary-eda/index.html#figures",
+    "href": "posts/2026-06-01-dietary-eda/index.html#figures",
+    "title": "Dietary exploratory visualizations",
+    "section": "2 Figures",
+    "text": "2 Figures\n\n2.1 Nutrient Correlation Matrix\nThis heatmap shows which dietary variables tend to increase or decrease together across observations.\n\n\n\n2.2 Scaled Nutrient Distributions\nThese boxplots place dietary variables on a common 0 to 1 scale to make differences in spread and median easier to compare\n\n\n\n2.3 Dietary Distributions by Study Group\nThese kernel density plots compare the shape of dietary variable distributions across study groups.\n\n\n\n2.4 Total Dietary Deficiency Score per Participant\nThis barplot summarizes each participant’s combined food group intake deficiency relative to the baseline food-group targets used in the dietary EDA workflow"
+  },
+  {
+    "objectID": "posts/2026-06-01-dietary-eda/index.html#interpretation",
+    "href": "posts/2026-06-01-dietary-eda/index.html#interpretation",
+    "title": "Dietary exploratory visualizations",
+    "section": "3 Interpretation",
+    "text": "3 Interpretation\nThese figures provide a quick descriptive view of dietary structure in the cohort: correlations among nutrients, relative variability across intake measures, between-group distribution shifts, and participant-level shortfalls against baseline diet targets"
+  },
+  {
+    "objectID": "posts/2026-05-26-heatmap/index.html",
+    "href": "posts/2026-05-26-heatmap/index.html",
+    "title": "Fungal taxonomic abundance heatmaps",
+    "section": "",
+    "text": "What patterns of fungal taxonomic abundance are visible across study groups (Non-IBD, Active IBD, Quiescent)? This is a descriptive visualization — no hypothesis test or p-value is computed here."
+  },
+  {
+    "objectID": "posts/2026-05-26-heatmap/index.html#research-question",
+    "href": "posts/2026-05-26-heatmap/index.html#research-question",
+    "title": "Fungal taxonomic abundance heatmaps",
+    "section": "",
+    "text": "What patterns of fungal taxonomic abundance are visible across study groups (Non-IBD, Active IBD, Quiescent)? This is a descriptive visualization — no hypothesis test or p-value is computed here."
+  },
+  {
+    "objectID": "posts/2026-05-26-heatmap/index.html#data",
+    "href": "posts/2026-05-26-heatmap/index.html#data",
+    "title": "Fungal taxonomic abundance heatmaps",
+    "section": "2 Data",
+    "text": "2 Data\n\nResponse: Log₁₀-transformed, z-score normalized relative abundance per taxon.\nPredictors: Study group annotation per sample column.\nUnit of analysis: Sample × taxon.\nInput files: data/intermediate/taxa_long_list.rds, data/intermediate/meta_data.rds (from make mycobiome).\nFiltering: Taxa with zero variance, zero total abundance, or prevalence &lt; 10 % of samples are excluded per taxonomic level."
+  },
+  {
+    "objectID": "posts/2026-05-26-heatmap/index.html#methods",
+    "href": "posts/2026-05-26-heatmap/index.html#methods",
+    "title": "Fungal taxonomic abundance heatmaps",
+    "section": "3 Methods",
+    "text": "3 Methods\n\n\n\n\n\n\n\nItem\nChoice\n\n\n\n\nTransformation\nlog₁₀(abundance + 1×10⁻⁶) per taxon\n\n\nScaling\nZ-score across samples per taxon (row-wise)\n\n\nClustering\nHierarchical (ComplexHeatmap defaults) on both rows and columns\n\n\nAnnotation\nStudy group colour bar (top)\n\n\nPackage\nComplexHeatmap\n\n\nMultiple testing\nNot applicable — no statistical test performed\n\n\n\n\nFigures generated by src/mycobiome/05_heatmap_analysis.R via make mycobiome."
+  },
+  {
+    "objectID": "posts/2026-05-26-heatmap/index.html#figures",
+    "href": "posts/2026-05-26-heatmap/index.html#figures",
+    "title": "Fungal taxonomic abundance heatmaps",
+    "section": "4 Figures",
+    "text": "4 Figures\n\n4.1 Phylum\n\n\n\nZ-score heatmap of fungal phyla. Columns are samples, rows are phyla passing prevalence filter. Top annotation shows study group.\n\n\n\n\n4.2 Family\n\n\n\nZ-score heatmap of fungal families.\n\n\n\n\n4.3 Genus\n\n\n\nZ-score heatmap of fungal genera.\n\n\n\n\n4.4 Species\n\n\n\nZ-score heatmap of fungal species."
+  },
+  {
+    "objectID": "posts/2026-05-26-heatmap/index.html#interpretation",
+    "href": "posts/2026-05-26-heatmap/index.html#interpretation",
+    "title": "Fungal taxonomic abundance heatmaps",
+    "section": "5 Interpretation",
+    "text": "5 Interpretation\nHeatmaps show relative abundance patterns across samples grouped by IBD status. Clustering of samples and taxa is driven by abundance co-variation, not by group labels — any apparent group separation is observational. Formal tests of group differences are in the PERMANOVA posts (make stats-permanova)."
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Analysis Log",
+    "section": "",
+    "text": "This site documents every statistical analysis in the project: the method and software settings, tabulated results, interpretation, and the plots that go with each analysis."
+  },
+  {
+    "objectID": "index.html#team",
+    "href": "index.html#team",
+    "title": "Analysis Log",
+    "section": "1 Team",
+    "text": "1 Team\n\nTeam: Tiffany Chu, Victoria Farkas, Ian Gault, Derrick Jaskiel\nMentor: Payman Nickchi"
+  },
+  {
+    "objectID": "index.html#where-to-find-analyses",
+    "href": "index.html#where-to-find-analyses",
+    "title": "Analysis Log",
+    "section": "2 Where to find analyses",
+    "text": "2 Where to find analyses\n\n\n\nTab\nYAML category\nContents\n\n\n\n\nExploratory Analysis\neda\nHeatmaps and descriptive pipeline figures (no hypothesis test)\n\n\nPre-specified Tests\npre-specified\nPERMANOVA, Kruskal–Wallis, Spearman, PCA/clustering, evidence-ranking matrix\n\n\n\nThe home page lists all posts. Use the navbar tabs to filter by type."
+  },
+  {
+    "objectID": "index.html#initial-exploration-notebooks",
+    "href": "index.html#initial-exploration-notebooks",
+    "title": "Analysis Log",
+    "section": "3 Initial exploration notebooks",
+    "text": "3 Initial exploration notebooks\nEarly-stage notebooks in notebooks/ are preserved for reference.\n\n\n\n\n\n\n\nNotebook\nContents\n\n\n\n\nnotebooks/stool_eda.Rmd\nStool mycobiome EDA, alpha diversity, Dunn post-hoc\n\n\nnotebooks/permanova.Rmd\nPERMANOVA and PCoA development\n\n\nnotebooks/pca_tsne.Rmd\nPCA and t-SNE exploration\n\n\nnotebooks/mycobiome_interactive.Rmd\nInteractive abundance visualizations\n\n\n\n\n\n\n\n\n\n\nAnalysis\nSource\n\n\n\n\nPERMANOVA + PCoA (phylum, family, genus, species)\nstats/posts/2026-05-19-permanova-*, stats/R/permanova_helpers.R, notebooks/permanova.Rmd\n\n\nSymptoms × fungal composition (Spearman + PERMANOVA)\nstats/posts/2026-05-22-symptoms-fungal-composition/, stats/R/symptom_association_helpers.R\n\n\nNutrients × diversity by disease group (Spearman)\nstats/posts/2026-05-29-nutrients-diversity-disease-group/, stats/R/nutrient_association_helpers.R\n\n\nDiet + mycobiome PCA / clustering\nstats/posts/2026-05-29-diet-mycobiome-pca-clustering/, stats/R/pca_clustering_helpers.R, notebooks/pca_tsne.Rmd\n\n\nEvidence-ranking matrix (disease group)\nstats/posts/2026-05-29-evidence-ranking-disease-group/, stats/R/evidence_ranking_helpers.R\n\n\nKruskal–Wallis (alpha diversity)\nsrc/mycobiome/03b_diversity_stats.R, notebooks/stool_eda.Rmd\n\n\nPCA / t-SNE\nnotebooks/pca_tsne.Rmd"
+  },
+  {
+    "objectID": "index.html#how-to-add-a-new-analysis",
+    "href": "index.html#how-to-add-a-new-analysis",
+    "title": "Analysis Log",
+    "section": "4 How to add a new analysis",
+    "text": "4 How to add a new analysis\n\nCopy stats/_template.qmd into a new folder, e.g. stats/posts/2026-05-19-my-test/index.qmd.\nFill in the YAML (title, date, categories, description) — tag with eda or pre-specified as appropriate.\nFill in each section: research question → data → methods → results → plot.\nRender from the repo root:\nquarto render stats\nOr use Render in RStudio / Positron."
+  },
+  {
+    "objectID": "posts/2026-05-19-permanova-phylum-beta-diversity/index.html",
+    "href": "posts/2026-05-19-permanova-phylum-beta-diversity/index.html",
+    "title": "PERMANOVA phylum beta diversity by study group",
+    "section": "",
+    "text": "Does study group explain differences in phylum-level community composition?\nNull: Multivariate centroids do not differ among study groups (PERMANOVA on Bray–Curtis distances)."
+  },
+  {
+    "objectID": "posts/2026-05-19-permanova-phylum-beta-diversity/index.html#research-question",
+    "href": "posts/2026-05-19-permanova-phylum-beta-diversity/index.html#research-question",
+    "title": "PERMANOVA phylum beta diversity by study group",
+    "section": "",
+    "text": "Does study group explain differences in phylum-level community composition?\nNull: Multivariate centroids do not differ among study groups (PERMANOVA on Bray–Curtis distances)."
+  },
+  {
+    "objectID": "posts/2026-05-19-permanova-phylum-beta-diversity/index.html#data",
+    "href": "posts/2026-05-19-permanova-phylum-beta-diversity/index.html#data",
+    "title": "PERMANOVA phylum beta diversity by study group",
+    "section": "2 Data",
+    "text": "2 Data\n\nResponse: Phylum relative abundance (p__* columns after wide reshape).\nPredictor: Study_group_new.\nInput: data/processed/phylum.csv (long format from make save; pivoted in this post)."
+  },
+  {
+    "objectID": "posts/2026-05-19-permanova-phylum-beta-diversity/index.html#methods",
+    "href": "posts/2026-05-19-permanova-phylum-beta-diversity/index.html#methods",
+    "title": "PERMANOVA phylum beta diversity by study group",
+    "section": "3 Methods",
+    "text": "3 Methods\n\n\n\nItem\nChoice\n\n\n\n\nTest\nPERMANOVA (vegan::adonis2)\n\n\nDistance\nBray–Curtis\n\n\nFormula\ndist ~ Study_group_new\n\n\nPermutations\n999\n\n\nVisualization\nPCoA (cmdscale, k = 2), 95% ellipses"
+  },
+  {
+    "objectID": "posts/2026-05-19-permanova-phylum-beta-diversity/index.html#results",
+    "href": "posts/2026-05-19-permanova-phylum-beta-diversity/index.html#results",
+    "title": "PERMANOVA phylum beta diversity by study group",
+    "section": "4 Results",
+    "text": "4 Results\n\n\n\n\n\nTerm\nDf\nSum of squares\nR²\nF\nPr(&gt;F)\n\n\n\n\nModel\n2\n0.3432\n0.1404\n1.0613\n0.412\n\n\nResidual\n13\n2.1020\n0.8596\nNA\nNA\n\n\nTotal\n15\n2.4452\n1.0000\nNA\nNA\n\n\n\n\n\nStudy group explained 14.0% of variance in Phylum composition (R² = 0.140; pseudo-F = 1.06; p = 0.4120, 999 permutations)."
+  },
+  {
+    "objectID": "posts/2026-05-19-permanova-phylum-beta-diversity/index.html#figure",
+    "href": "posts/2026-05-19-permanova-phylum-beta-diversity/index.html#figure",
+    "title": "PERMANOVA phylum beta diversity by study group",
+    "section": "5 Figure",
+    "text": "5 Figure\n\n\nShow code\nplot_pcoa_study_group(\n  fit$dist,\n  fit$metadata,\n  permanova_result,\n  cfg$label\n)\n\n\n\n\n\n\n\n\nFigure 1: PCoA of phylum Bray–Curtis dissimilarity by study group."
+  },
+  {
+    "objectID": "posts/2026-05-19-permanova-phylum-beta-diversity/index.html#reproducibility",
+    "href": "posts/2026-05-19-permanova-phylum-beta-diversity/index.html#reproducibility",
+    "title": "PERMANOVA phylum beta diversity by study group",
+    "section": "6 Reproducibility",
+    "text": "6 Reproducibility\n\nHelpers: stats/R/permanova_helpers.R\nPipeline: make wrangle → make save\nRelated: species/genus/family posts in this log; notebooks/permanova.Rmd"
+  },
+  {
+    "objectID": "posts/2026-06-16-characteristics-missingness/index.html",
+    "href": "posts/2026-06-16-characteristics-missingness/index.html",
+    "title": "Participant characteristics: missingness audit",
+    "section": "",
+    "text": "This post documents missingness in data/processed/cleaned_characteristics.csv after the cleaning pipeline in src/characteristics/characteristics.R. The goal is descriptive: quantify where data are absent, which variable groups are most affected, and how complete the cohort is on fields used in downstream analyses. No hypothesis test is performed.\n\nFigures generated by src/characteristics/01_missingness_eda.R via make characteristics."
+  },
+  {
+    "objectID": "posts/2026-06-16-characteristics-missingness/index.html#overview",
+    "href": "posts/2026-06-16-characteristics-missingness/index.html#overview",
+    "title": "Participant characteristics: missingness audit",
+    "section": "",
+    "text": "This post documents missingness in data/processed/cleaned_characteristics.csv after the cleaning pipeline in src/characteristics/characteristics.R. The goal is descriptive: quantify where data are absent, which variable groups are most affected, and how complete the cohort is on fields used in downstream analyses. No hypothesis test is performed.\n\nFigures generated by src/characteristics/01_missingness_eda.R via make characteristics."
+  },
+  {
+    "objectID": "posts/2026-06-16-characteristics-missingness/index.html#data",
+    "href": "posts/2026-06-16-characteristics-missingness/index.html#data",
+    "title": "Participant characteristics: missingness audit",
+    "section": "2 Data",
+    "text": "2 Data\n\nUnit of analysis: Participant (one row per survey record in the characteristics file).\nInput: data/processed/cleaned_characteristics.csv (make characteristics on data/raw/SYN_Participant Characteristics.xlsx).\nScope: All 146 columns after cleaning, including demographics, IBD clinical scores, symptom-frequency items, food-avoidance blocks, and ancillary survey fields.\n\nCohort size: 12 participants, 146 variables.\nColumns with no missing values: 128 (87.7% of variables).\nMedian participant missingness: 9.9% of variables missing per person (max 11.6%).\nComplete on core clinical/demographic fields (10 variables): 12 / 12 participants."
+  },
+  {
+    "objectID": "posts/2026-06-16-characteristics-missingness/index.html#methods",
+    "href": "posts/2026-06-16-characteristics-missingness/index.html#methods",
+    "title": "Participant characteristics: missingness audit",
+    "section": "3 Methods",
+    "text": "3 Methods\n\n\n\n\n\n\n\nItem\nChoice\n\n\n\n\nMissing definition\nNA after cleaning (blank cells, failed coercion, or scrubbed impossible values)\n\n\nColumn summaries\nCount and percent missing per variable\n\n\nParticipant summaries\nPercent of variables missing per participant\n\n\nVariable grouping\nRule-based labels (demographics, IBD clinical, symptom frequency, food avoidance, etc.)\n\n\nStatistical test\nNone — exploratory audit only"
+  },
+  {
+    "objectID": "posts/2026-06-16-characteristics-missingness/index.html#figures",
+    "href": "posts/2026-06-16-characteristics-missingness/index.html#figures",
+    "title": "Participant characteristics: missingness audit",
+    "section": "4 Figures",
+    "text": "4 Figures\n\n4.1 Missingness bands across variables\nHow many columns fall into each missingness range.\n\n\n\n4.2 Variable-level missing rates\nAll variables with at least one missing value, coloured by survey domain.\n\n\n\n4.3 Participant-level burden\nDistribution of how many variables are missing per participant.\n\n\n\n4.4 Core clinical and demographic fields\nMissingness pattern for fields most often used in symptom and cohort summaries."
+  },
+  {
+    "objectID": "posts/2026-06-16-characteristics-missingness/index.html#highest-missing-variables",
+    "href": "posts/2026-06-16-characteristics-missingness/index.html#highest-missing-variables",
+    "title": "Participant characteristics: missingness audit",
+    "section": "5 Highest-missing variables",
+    "text": "5 Highest-missing variables\n\n\n\n\n\nVariable\nMissing n\nMissing %\n\n\n\n\nexcluded_fruits_active\n12\n100\n\n\nexcluded_fruits_rem\n12\n100\n\n\nexcluded_gluten_active\n12\n100\n\n\nexcluded_gluten_rem\n12\n100\n\n\nexcluded_nuts_seeds_active\n12\n100\n\n\nexcluded_nuts_seeds_rem\n12\n100\n\n\nexcluded_spicy_foods_rem\n12\n100\n\n\nexcluded_vegetables_rem\n12\n100\n\n\nexcluded_whole_grains_active\n12\n100\n\n\nexcluded_whole_grains_rem\n12\n100\n\n\nif_‘other’,_please_specify\n12\n100\n\n\nexcluded_spicy_foods_active\n9\n75\n\n\nexcluded_fat_foods_rem\n6\n50\n\n\nexcluded_lactose_active\n6\n50\n\n\nexcluded_lactose_rem\n6\n50"
+  },
+  {
+    "objectID": "posts/2026-06-16-characteristics-missingness/index.html#interpretation",
+    "href": "posts/2026-06-16-characteristics-missingness/index.html#interpretation",
+    "title": "Participant characteristics: missingness audit",
+    "section": "6 Interpretation",
+    "text": "6 Interpretation\nMissingness varies across the survey. After cleaning, the demographic fields (age, gender, ethnicity, comorbidities) have no missing values, and BMI is complete. Conditional follow-up fields, such as the food-avoidance “excluded …” columns, are a median 100% missing. These only apply when a participant reports avoidance, so high missingness is expected.\nAll 30 symptom-frequency items are complete. 12 of 12 participants have complete data across the 10 core clinical fields listed above.\nImplications for analysis:\n\nTreat food-avoidance and free-text exclusion columns as sparse optional modules, not core covariates.\nFor symptom scores, report available N per variable and consider sensitivity analyses restricted to complete cases.\nThe cleaning pipeline imputes or recodes some fields (e.g. median age for missing age, \"missing\" ethnicity, \"none\" comorbidities); this audit reflects post-cleaning missingness on fields left as NA."
+  },
+  {
+    "objectID": "posts/2026-06-16-characteristics-missingness/index.html#reproducibility",
+    "href": "posts/2026-06-16-characteristics-missingness/index.html#reproducibility",
+    "title": "Participant characteristics: missingness audit",
+    "section": "7 Reproducibility",
+    "text": "7 Reproducibility\n\nCleaning: src/characteristics/characteristics.R\nMissingness figures: src/characteristics/01_missingness_eda.R\nRendered: make characteristics then quarto render stats from repository root"
+  },
+  {
+    "objectID": "posts/2026-05-29-nutrients-diversity-disease-group/index.html",
+    "href": "posts/2026-05-29-nutrients-diversity-disease-group/index.html",
+    "title": "Nutrients vs fungal diversity by disease group (Spearman)",
+    "section": "",
+    "text": "Are certain nutrients associated with fungal alpha diversity, and do those associations differ across disease groups?\nNull (overall): No monotonic association between each nutrient and each alpha diversity metric across all samples.\nNull (stratified): Within each study group, no monotonic association between nutrient intake and alpha diversity.\nComparing overall vs group-specific Spearman () is exploratory (small n per group); formal tests of correlation differences were not run."
+  },
+  {
+    "objectID": "posts/2026-05-29-nutrients-diversity-disease-group/index.html#research-question",
+    "href": "posts/2026-05-29-nutrients-diversity-disease-group/index.html#research-question",
+    "title": "Nutrients vs fungal diversity by disease group (Spearman)",
+    "section": "",
+    "text": "Are certain nutrients associated with fungal alpha diversity, and do those associations differ across disease groups?\nNull (overall): No monotonic association between each nutrient and each alpha diversity metric across all samples.\nNull (stratified): Within each study group, no monotonic association between nutrient intake and alpha diversity.\nComparing overall vs group-specific Spearman () is exploratory (small n per group); formal tests of correlation differences were not run."
+  },
+  {
+    "objectID": "posts/2026-05-29-nutrients-diversity-disease-group/index.html#data",
+    "href": "posts/2026-05-29-nutrients-diversity-disease-group/index.html#data",
+    "title": "Nutrients vs fungal diversity by disease group (Spearman)",
+    "section": "2 Data",
+    "text": "2 Data\n\n\n\n\n\n\n\nRole\nSource\n\n\n\n\nMycobiome (alpha)\ndata/intermediate/alpha_long.rds (make wrangle)\n\n\nDiet\ndata/processed/dietary_cleaned.xlsx (make dietary on data/raw/SYN_dietary data(ALL).csv)\n\n\nDisease group\nStudy_group_new on mycobiome metadata (from SYN_MBI sample IDs meta.xlsx)\n\n\n\n\nUnit of analysis: Stool sample (16 samples, 12 participants); nutrients are participant means across diet diary days (same as merge_files.R).\nJoin key: Participant_ID = Participant ID (ESHA ID) (normalized SYN codes).\nNutrients: Pre-specified panel (fiber, tryptophan, calories, sweeteners, sugars, fats, omegas, vitamin D, folate); see helpers.\nInclusion: Samples retained after 02_data_wrangling.R removals.\n\nCoverage: 16 samples, 12 participants, 16 samples with fiber data; study groups: Active IBD, Non-IBD, Quiescent."
+  },
+  {
+    "objectID": "posts/2026-05-29-nutrients-diversity-disease-group/index.html#methods",
+    "href": "posts/2026-05-29-nutrients-diversity-disease-group/index.html#methods",
+    "title": "Nutrients vs fungal diversity by disease group (Spearman)",
+    "section": "3 Methods",
+    "text": "3 Methods\n\n\n\n\n\n\n\nItem\nChoice\n\n\n\n\nTest\nSpearman rank correlation (cor.test, method = \"spearman\")\n\n\nResponse\nShannon, Simpson, Chao1\n\n\nPredictors\nParticipant-mean nutrient intake (g, kcal, mg as recorded)\n\n\nStratification\nStudy_group_new (Active IBD, Quiescent, Non-IBD) + Overall\n\n\nMultiple testing\nBenjamini–Hochberg within each stratum (across nutrient × metric pairs)\n\n\nMinimum n\nCorrelation only if ≥ 4 complete pairs\n\n\nSignificance\nα = 0.05\n\n\n\n\n\nShow code\nspearman_results &lt;- spearman_nutrient_alpha(sample_nutrients)"
+  },
+  {
+    "objectID": "posts/2026-05-29-nutrients-diversity-disease-group/index.html#assumptions-and-diagnostics",
+    "href": "posts/2026-05-29-nutrients-diversity-disease-group/index.html#assumptions-and-diagnostics",
+    "title": "Nutrients vs fungal diversity by disease group (Spearman)",
+    "section": "4 Assumptions and diagnostics",
+    "text": "4 Assumptions and diagnostics\n\nIndependence: Up to two stool replicates per participant; dietary intake is duplicated across replicates. Exploratory only.\nSpearman: Monotonic association; no linearity assumption.\nStratified n: Few samples per study group limits power; many strata will return NA correlations."
+  },
+  {
+    "objectID": "posts/2026-05-29-nutrients-diversity-disease-group/index.html#results",
+    "href": "posts/2026-05-29-nutrients-diversity-disease-group/index.html#results",
+    "title": "Nutrients vs fungal diversity by disease group (Spearman)",
+    "section": "5 Results",
+    "text": "5 Results\n\n5.1 Overall correlations\n\n\n\n\n\n\n\n\n\n\n\n\n\nNutrient\nAlpha metric\nn\nSpearman rho\np\nBH-adjusted p\n\n\n\n\nTotal fiber (g/day)\nShannon\n16\n0.0000\n1.0000\n1.0000\n\n\nTotal fiber (g/day)\nSimpson\n16\n-0.0605\n0.8239\n0.9376\n\n\nTotal fiber (g/day)\nChao1\n16\n0.1932\n0.4734\n0.9376\n\n\nTryptophan (g/day)\nShannon\n16\n-0.2330\n0.3851\n0.9376\n\n\nTryptophan (g/day)\nSimpson\n16\n-0.0723\n0.7903\n0.9376\n\n\nTryptophan (g/day)\nChao1\n16\n0.0723\n0.7903\n0.9376\n\n\nCalories (kcal/day)\nShannon\n16\n0.0354\n0.8964\n0.9644\n\n\nCalories (kcal/day)\nSimpson\n16\n-0.1431\n0.5971\n0.9376\n\n\nCalories (kcal/day)\nChao1\n16\n-0.0752\n0.7819\n0.9376\n\n\nArtificial sweeteners (mg/day)\nShannon\n16\n0.0973\n0.7199\n0.9376\n\n\nArtificial sweeteners (mg/day)\nSimpson\n16\n0.0310\n0.9093\n0.9644\n\n\nArtificial sweeteners (mg/day)\nChao1\n16\n-0.1136\n0.6754\n0.9376\n\n\nSugar (g/day)\nShannon\n16\n0.1298\n0.6319\n0.9376\n\n\nSugar (g/day)\nSimpson\n16\n0.2286\n0.3944\n0.9376\n\n\nSugar (g/day)\nChao1\n16\n0.2168\n0.4199\n0.9376\n\n\nAdded sugar (g/day)\nShannon\n16\n-0.5339\n0.0331\n0.9376\n\n\nAdded sugar (g/day)\nSimpson\n16\n0.1903\n0.4803\n0.9376\n\n\nAdded sugar (g/day)\nChao1\n16\n-0.1519\n0.5744\n0.9376\n\n\nFat (g/day)\nShannon\n16\n-0.3864\n0.1393\n0.9376\n\n\nFat (g/day)\nSimpson\n16\n0.1932\n0.4734\n0.9376\n\n\nFat (g/day)\nChao1\n16\n-0.1755\n0.5156\n0.9376\n\n\nOmega-3 (g/day)\nShannon\n16\n0.0885\n0.7445\n0.9376\n\n\nOmega-3 (g/day)\nSimpson\n16\n-0.0693\n0.7986\n0.9376\n\n\nOmega-3 (g/day)\nChao1\n16\n-0.1726\n0.5228\n0.9376\n\n\nOmega-6 (g/day)\nShannon\n16\n-0.3363\n0.2028\n0.9376\n\n\nOmega-6 (g/day)\nSimpson\n16\n-0.1932\n0.4734\n0.9376\n\n\nOmega-6 (g/day)\nChao1\n16\n0.1637\n0.5446\n0.9376\n\n\nVitamin D (mcg/day)\nShannon\n16\n0.4690\n0.0668\n0.9376\n\n\nVitamin D (mcg/day)\nSimpson\n16\n-0.0929\n0.7321\n0.9376\n\n\nVitamin D (mcg/day)\nChao1\n16\n-0.0929\n0.7321\n0.9376\n\n\nFolate (mcg/day)\nShannon\n16\n0.1681\n0.5336\n0.9376\n\n\nFolate (mcg/day)\nSimpson\n16\n0.0221\n0.9352\n0.9644\n\n\nFolate (mcg/day)\nChao1\n16\n-0.1578\n0.5594\n0.9376\n\n\n\n\n\n\n\n5.2 Stratified by study group\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nStudy group\nNutrient\nAlpha metric\nn\nSpearman rho\np\nBH-adjusted p\n\n\n\n\nActive IBD\nTotal fiber (g/day)\nShannon\n6\n0.1471\n0.7809\n0.8951\n\n\nActive IBD\nTotal fiber (g/day)\nSimpson\n6\n0.0883\n0.8679\n0.8951\n\n\nActive IBD\nTotal fiber (g/day)\nChao1\n6\n-0.0883\n0.8679\n0.8951\n\n\nActive IBD\nTryptophan (g/day)\nShannon\n6\n-0.2648\n0.6121\n0.8951\n\n\nActive IBD\nTryptophan (g/day)\nSimpson\n6\n0.0883\n0.8679\n0.8951\n\n\nActive IBD\nTryptophan (g/day)\nChao1\n6\n0.2648\n0.6121\n0.8951\n\n\nActive IBD\nCalories (kcal/day)\nShannon\n6\n0.5591\n0.2488\n0.8951\n\n\nActive IBD\nCalories (kcal/day)\nSimpson\n6\n-0.4414\n0.3809\n0.8951\n\n\nActive IBD\nCalories (kcal/day)\nChao1\n6\n-0.8533\n0.0307\n0.5065\n\n\nActive IBD\nArtificial sweeteners (mg/day)\nShannon\n6\n-0.6179\n0.1911\n0.8951\n\n\nActive IBD\nArtificial sweeteners (mg/day)\nSimpson\n6\n0.0883\n0.8679\n0.8951\n\n\nActive IBD\nArtificial sweeteners (mg/day)\nChao1\n6\n0.6179\n0.1911\n0.8951\n\n\nActive IBD\nSugar (g/day)\nShannon\n6\n-0.5591\n0.2488\n0.8951\n\n\nActive IBD\nSugar (g/day)\nSimpson\n6\n0.4414\n0.3809\n0.8951\n\n\nActive IBD\nSugar (g/day)\nChao1\n6\n0.8533\n0.0307\n0.5065\n\n\nActive IBD\nAdded sugar (g/day)\nShannon\n6\n-0.1471\n0.7809\n0.8951\n\n\nActive IBD\nAdded sugar (g/day)\nSimpson\n6\n-0.4414\n0.3809\n0.8951\n\n\nActive IBD\nAdded sugar (g/day)\nChao1\n6\n-0.2648\n0.6121\n0.8951\n\n\nActive IBD\nFat (g/day)\nShannon\n6\n0.1471\n0.7809\n0.8951\n\n\nActive IBD\nFat (g/day)\nSimpson\n6\n0.0883\n0.8679\n0.8951\n\n\nActive IBD\nFat (g/day)\nChao1\n6\n-0.0883\n0.8679\n0.8951\n\n\nActive IBD\nOmega-3 (g/day)\nShannon\n6\n-0.0883\n0.8679\n0.8951\n\n\nActive IBD\nOmega-3 (g/day)\nSimpson\n6\n-0.4414\n0.3809\n0.8951\n\n\nActive IBD\nOmega-3 (g/day)\nChao1\n6\n-0.2648\n0.6121\n0.8951\n\n\nActive IBD\nOmega-6 (g/day)\nShannon\n6\n-0.1471\n0.7809\n0.8951\n\n\nActive IBD\nOmega-6 (g/day)\nSimpson\n6\n-0.4414\n0.3809\n0.8951\n\n\nActive IBD\nOmega-6 (g/day)\nChao1\n6\n-0.2648\n0.6121\n0.8951\n\n\nActive IBD\nVitamin D (mcg/day)\nShannon\n6\n-0.1471\n0.7809\n0.8951\n\n\nActive IBD\nVitamin D (mcg/day)\nSimpson\n6\n-0.0883\n0.8679\n0.8951\n\n\nActive IBD\nVitamin D (mcg/day)\nChao1\n6\n0.0883\n0.8679\n0.8951\n\n\nActive IBD\nFolate (mcg/day)\nShannon\n6\n0.3237\n0.5314\n0.8951\n\n\nActive IBD\nFolate (mcg/day)\nSimpson\n6\n0.2648\n0.6121\n0.8951\n\n\nActive IBD\nFolate (mcg/day)\nChao1\n6\n-0.0294\n0.9559\n0.9559\n\n\nNon-IBD\nTotal fiber (g/day)\nShannon\n5\n-0.5643\n0.3217\n0.7016\n\n\nNon-IBD\nTotal fiber (g/day)\nSimpson\n5\n-0.0513\n0.9347\n0.9347\n\n\nNon-IBD\nTotal fiber (g/day)\nChao1\n5\n0.6669\n0.2189\n0.6020\n\n\nNon-IBD\nTryptophan (g/day)\nShannon\n5\n0.1539\n0.8048\n0.9347\n\n\nNon-IBD\nTryptophan (g/day)\nSimpson\n5\n-0.3591\n0.5528\n0.7016\n\n\nNon-IBD\nTryptophan (g/day)\nChao1\n5\n0.9747\n0.0048\n0.0530\n\n\nNon-IBD\nCalories (kcal/day)\nShannon\n5\n-0.3591\n0.5528\n0.7016\n\n\nNon-IBD\nCalories (kcal/day)\nSimpson\n5\n-0.3591\n0.5528\n0.7016\n\n\nNon-IBD\nCalories (kcal/day)\nChao1\n5\n-0.3591\n0.5528\n0.7016\n\n\nNon-IBD\nArtificial sweeteners (mg/day)\nShannon\n5\n-0.0513\n0.9347\n0.9347\n\n\nNon-IBD\nArtificial sweeteners (mg/day)\nSimpson\n5\n-0.0513\n0.9347\n0.9347\n\n\nNon-IBD\nArtificial sweeteners (mg/day)\nChao1\n5\n-0.8721\n0.0539\n0.2539\n\n\nNon-IBD\nSugar (g/day)\nShannon\n5\n0.3591\n0.5528\n0.7016\n\n\nNon-IBD\nSugar (g/day)\nSimpson\n5\n0.3591\n0.5528\n0.7016\n\n\nNon-IBD\nSugar (g/day)\nChao1\n5\n0.3591\n0.5528\n0.7016\n\n\nNon-IBD\nAdded sugar (g/day)\nShannon\n5\n-0.6669\n0.2189\n0.6020\n\n\nNon-IBD\nAdded sugar (g/day)\nSimpson\n5\n0.8721\n0.0539\n0.2539\n\n\nNon-IBD\nAdded sugar (g/day)\nChao1\n5\n-0.6669\n0.2189\n0.6020\n\n\nNon-IBD\nFat (g/day)\nShannon\n5\n-0.5643\n0.3217\n0.7016\n\n\nNon-IBD\nFat (g/day)\nSimpson\n5\n0.9747\n0.0048\n0.0530\n\n\nNon-IBD\nFat (g/day)\nChao1\n5\n-0.3591\n0.5528\n0.7016\n\n\nNon-IBD\nOmega-3 (g/day)\nShannon\n5\n-0.0513\n0.9347\n0.9347\n\n\nNon-IBD\nOmega-3 (g/day)\nSimpson\n5\n-0.0513\n0.9347\n0.9347\n\n\nNon-IBD\nOmega-3 (g/day)\nChao1\n5\n-0.8721\n0.0539\n0.2539\n\n\nNon-IBD\nOmega-6 (g/day)\nShannon\n5\n-0.3591\n0.5528\n0.7016\n\n\nNon-IBD\nOmega-6 (g/day)\nSimpson\n5\n-0.3591\n0.5528\n0.7016\n\n\nNon-IBD\nOmega-6 (g/day)\nChao1\n5\n-0.3591\n0.5528\n0.7016\n\n\nNon-IBD\nVitamin D (mcg/day)\nShannon\n5\n0.9747\n0.0048\n0.0530\n\n\nNon-IBD\nVitamin D (mcg/day)\nSimpson\n5\n-0.5643\n0.3217\n0.7016\n\n\nNon-IBD\nVitamin D (mcg/day)\nChao1\n5\n0.1539\n0.8048\n0.9347\n\n\nNon-IBD\nFolate (mcg/day)\nShannon\n5\n0.6669\n0.2189\n0.6020\n\n\nNon-IBD\nFolate (mcg/day)\nSimpson\n5\n-0.8721\n0.0539\n0.2539\n\n\nNon-IBD\nFolate (mcg/day)\nChao1\n5\n0.6669\n0.2189\n0.6020\n\n\nQuiescent\nTotal fiber (g/day)\nShannon\n5\n-0.0513\n0.9347\n0.9347\n\n\nQuiescent\nTotal fiber (g/day)\nSimpson\n5\n-0.0513\n0.9347\n0.9347\n\n\nQuiescent\nTotal fiber (g/day)\nChao1\n5\n0.4104\n0.4925\n0.7932\n\n\nQuiescent\nTryptophan (g/day)\nShannon\n5\n-0.4617\n0.4338\n0.7932\n\n\nQuiescent\nTryptophan (g/day)\nSimpson\n5\n-0.1539\n0.8048\n0.9347\n\n\nQuiescent\nTryptophan (g/day)\nChao1\n5\n-0.8208\n0.0886\n0.7308\n\n\nQuiescent\nCalories (kcal/day)\nShannon\n5\n0.4617\n0.4338\n0.7932\n\n\nQuiescent\nCalories (kcal/day)\nSimpson\n5\n-0.0513\n0.9347\n0.9347\n\n\nQuiescent\nCalories (kcal/day)\nChao1\n5\n0.4104\n0.4925\n0.7932\n\n\nQuiescent\nArtificial sweeteners (mg/day)\nShannon\n5\n0.5643\n0.3217\n0.7932\n\n\nQuiescent\nArtificial sweeteners (mg/day)\nSimpson\n5\n0.3591\n0.5528\n0.7932\n\n\nQuiescent\nArtificial sweeteners (mg/day)\nChao1\n5\n0.2052\n0.7406\n0.9052\n\n\nQuiescent\nSugar (g/day)\nShannon\n5\n0.5643\n0.3217\n0.7932\n\n\nQuiescent\nSugar (g/day)\nSimpson\n5\n0.3591\n0.5528\n0.7932\n\n\nQuiescent\nSugar (g/day)\nChao1\n5\n0.2052\n0.7406\n0.9052\n\n\nQuiescent\nAdded sugar (g/day)\nShannon\n5\n-0.4617\n0.4338\n0.7932\n\n\nQuiescent\nAdded sugar (g/day)\nSimpson\n5\n0.0513\n0.9347\n0.9347\n\n\nQuiescent\nAdded sugar (g/day)\nChao1\n5\n-0.4104\n0.4925\n0.7932\n\n\nQuiescent\nFat (g/day)\nShannon\n5\n-0.6669\n0.2189\n0.7932\n\n\nQuiescent\nFat (g/day)\nSimpson\n5\n-0.8721\n0.0539\n0.7308\n\n\nQuiescent\nFat (g/day)\nChao1\n5\n-0.2052\n0.7406\n0.9052\n\n\nQuiescent\nOmega-3 (g/day)\nShannon\n5\n0.5643\n0.3217\n0.7932\n\n\nQuiescent\nOmega-3 (g/day)\nSimpson\n5\n0.5643\n0.3217\n0.7932\n\n\nQuiescent\nOmega-3 (g/day)\nChao1\n5\n0.6156\n0.2690\n0.7932\n\n\nQuiescent\nOmega-6 (g/day)\nShannon\n5\n-0.4617\n0.4338\n0.7932\n\n\nQuiescent\nOmega-6 (g/day)\nSimpson\n5\n-0.9747\n0.0048\n0.1590\n\n\nQuiescent\nOmega-6 (g/day)\nChao1\n5\n0.1026\n0.8696\n0.9347\n\n\nQuiescent\nVitamin D (mcg/day)\nShannon\n5\n0.3591\n0.5528\n0.7932\n\n\nQuiescent\nVitamin D (mcg/day)\nSimpson\n5\n0.6669\n0.2189\n0.7932\n\n\nQuiescent\nVitamin D (mcg/day)\nChao1\n5\n0.3078\n0.6144\n0.8448\n\n\nQuiescent\nFolate (mcg/day)\nShannon\n5\n-0.3591\n0.5528\n0.7932\n\n\nQuiescent\nFolate (mcg/day)\nSimpson\n5\n0.3591\n0.5528\n0.7932\n\n\nQuiescent\nFolate (mcg/day)\nChao1\n5\n-0.8208\n0.0886\n0.7308\n\n\n\n\n\nNo nutrient × diversity pairs were significant after BH adjustment (q &lt; 0.05) in any stratum.\nTotal fiber × Shannon (all strata):\nOverall: rho = 0.000 (n = 16, p = 1.0000) Active IBD: rho = 0.147 (n = 6, p = 0.7809) Non-IBD: rho = -0.564 (n = 5, p = 0.3217) Quiescent: rho = -0.051 (n = 5, p = 0.9347)"
+  },
+  {
+    "objectID": "posts/2026-05-29-nutrients-diversity-disease-group/index.html#figures",
+    "href": "posts/2026-05-29-nutrients-diversity-disease-group/index.html#figures",
+    "title": "Nutrients vs fungal diversity by disease group (Spearman)",
+    "section": "6 Figures",
+    "text": "6 Figures\n\n6.1 Total fiber vs Shannon diversity (by study group)\n\n\nShow code\nplot_nutrient_alpha_scatter(\n  sample_nutrients,\n  nutrient_col = \"TotFib (g)\",\n  metric = \"Shannon\",\n  facet_by = \"Study_group_new\"\n)\n\n\n\n\n\n\n\n\nFigure 1: Total fiber intake vs Shannon diversity. Points are stool samples; diet is participant-mean intake. Facets show study group.\n\n\n\n\n\n\n\n6.2 Tryptophan vs Shannon diversity (by study group)\n\n\nShow code\nplot_nutrient_alpha_scatter(\n  sample_nutrients,\n  nutrient_col = \"Trp (g)\",\n  metric = \"Shannon\",\n  facet_by = \"Study_group_new\"\n)\n\n\n\n\n\n\n\n\nFigure 2: Tryptophan intake vs Shannon diversity, faceted by study group."
+  },
+  {
+    "objectID": "posts/2026-05-29-nutrients-diversity-disease-group/index.html#interpretation",
+    "href": "posts/2026-05-29-nutrients-diversity-disease-group/index.html#interpretation",
+    "title": "Nutrients vs fungal diversity by disease group (Spearman)",
+    "section": "7 Interpretation",
+    "text": "7 Interpretation\nOverall Spearman correlations pool all study groups; stratified correlations describe associations within Active IBD, Quiescent, and Non-IBD separately. A nutrient may correlate with diversity overall but not within groups (or vice versa) when group-specific slopes differ or sample sizes are small.\nThese results do not test whether two correlation coefficients differ significantly between groups; that would require larger n or dedicated methods (e.g. comparing dependent correlations)."
+  },
+  {
+    "objectID": "posts/2026-05-29-nutrients-diversity-disease-group/index.html#reproducibility",
+    "href": "posts/2026-05-29-nutrients-diversity-disease-group/index.html#reproducibility",
+    "title": "Nutrients vs fungal diversity by disease group (Spearman)",
+    "section": "8 Reproducibility",
+    "text": "8 Reproducibility\n\nHelpers: stats/R/nutrient_association_helpers.R\nDiet pipeline: src/diet/dietary.py\nMerge reference: src/merge_files.R (aggregate_dietary)\nRender: quarto render stats from repository root"
+  },
+  {
+    "objectID": "posts/2026-06-09-domain-relationship-scatter-plots/index.html",
+    "href": "posts/2026-06-09-domain-relationship-scatter-plots/index.html",
+    "title": "Mycobiome-Diet Relationship Exploration",
+    "section": "",
+    "text": "This post contains figures exporing the relationships between a few key mycobiome (shannon diversity, fecal calprotectin) and dietary (fiber, tryptophan) markers, as well as participant age. The visuals consist of scatterplots overlayed with fitted OLS regression models, and are accompanied by their associated significance values.\n\n\nShow code\n# ---- Setup ----\nsuppressPackageStartupMessages({\n  library(dplyr)\n  library(ggplot2)\n  library(readr)\n  library(here)\n})\n\nsource(here::here(\"R\", \"domain_scatterplot_helpers.R\"))\n\n# ---- Load Merged Data ----\n\nmerged &lt;- read_csv(\"../../../data/processed/merged.csv\", show_col_types = FALSE)\n\nmerged &lt;- merged |&gt;\n  mutate(ratio_basidio_asco = p__Basidiomycota / (p__Ascomycota + 1e-6))\n\ninflam &lt;- readRDS(\"../../../data/intermediate/inflammatory_markers.rds\")\n\n# ---- Split Merged Data into Sample and Participant Sets ----\n\nsample_df &lt;- merged |&gt;\n  rename(Disease_status = Study_group_new) |&gt;\n  rename(\n    `Participant_ID`             = `participant_id`,\n    `Fiber (g)`                  = `TotFib (g)`,\n    `Tryptophan (g)`             = `Trp (g)`,\n    `Artificial sweeteners (mg)` = `ArtSw (mg)`,\n    `Calories (kcal)`            = `Cals (kcal)`,\n    Age                          = age,\n    BMI                          = bmi_1,\n    `Harvey-Bradshaw Index`      = harvey_bradshaw_index\n  ) |&gt;\n  mutate(\n    HBI_category = case_when(\n      `Harvey-Bradshaw Index` &lt;= 4 ~ \"Remission\",\n      `Harvey-Bradshaw Index` &lt;= 7 ~ \"Mild\",\n      `Harvey-Bradshaw Index`  &gt; 7 ~ \"Moderate/Severe\"\n    ),\n    HBI_category = factor(HBI_category,\n                          levels = c(\"Remission\", \"Mild\", \"Moderate/Severe\"))\n  )\n\nparticipant_df &lt;- sample_df |&gt;\n  left_join(\n    inflam |&gt; select(Participant_ID, fecal_calprotectin, crp),\n    by = \"Participant_ID\"\n  ) |&gt;\n  rename(\n    `Fecal Calprotectin` = fecal_calprotectin,\n    CRP                  = crp\n  ) |&gt;\n  distinct(Participant_ID, .keep_all = TRUE)"
+  },
+  {
+    "objectID": "posts/2026-06-09-domain-relationship-scatter-plots/index.html#overview",
+    "href": "posts/2026-06-09-domain-relationship-scatter-plots/index.html#overview",
+    "title": "Mycobiome-Diet Relationship Exploration",
+    "section": "",
+    "text": "This post contains figures exporing the relationships between a few key mycobiome (shannon diversity, fecal calprotectin) and dietary (fiber, tryptophan) markers, as well as participant age. The visuals consist of scatterplots overlayed with fitted OLS regression models, and are accompanied by their associated significance values.\n\n\nShow code\n# ---- Setup ----\nsuppressPackageStartupMessages({\n  library(dplyr)\n  library(ggplot2)\n  library(readr)\n  library(here)\n})\n\nsource(here::here(\"R\", \"domain_scatterplot_helpers.R\"))\n\n# ---- Load Merged Data ----\n\nmerged &lt;- read_csv(\"../../../data/processed/merged.csv\", show_col_types = FALSE)\n\nmerged &lt;- merged |&gt;\n  mutate(ratio_basidio_asco = p__Basidiomycota / (p__Ascomycota + 1e-6))\n\ninflam &lt;- readRDS(\"../../../data/intermediate/inflammatory_markers.rds\")\n\n# ---- Split Merged Data into Sample and Participant Sets ----\n\nsample_df &lt;- merged |&gt;\n  rename(Disease_status = Study_group_new) |&gt;\n  rename(\n    `Participant_ID`             = `participant_id`,\n    `Fiber (g)`                  = `TotFib (g)`,\n    `Tryptophan (g)`             = `Trp (g)`,\n    `Artificial sweeteners (mg)` = `ArtSw (mg)`,\n    `Calories (kcal)`            = `Cals (kcal)`,\n    Age                          = age,\n    BMI                          = bmi_1,\n    `Harvey-Bradshaw Index`      = harvey_bradshaw_index\n  ) |&gt;\n  mutate(\n    HBI_category = case_when(\n      `Harvey-Bradshaw Index` &lt;= 4 ~ \"Remission\",\n      `Harvey-Bradshaw Index` &lt;= 7 ~ \"Mild\",\n      `Harvey-Bradshaw Index`  &gt; 7 ~ \"Moderate/Severe\"\n    ),\n    HBI_category = factor(HBI_category,\n                          levels = c(\"Remission\", \"Mild\", \"Moderate/Severe\"))\n  )\n\nparticipant_df &lt;- sample_df |&gt;\n  left_join(\n    inflam |&gt; select(Participant_ID, fecal_calprotectin, crp),\n    by = \"Participant_ID\"\n  ) |&gt;\n  rename(\n    `Fecal Calprotectin` = fecal_calprotectin,\n    CRP                  = crp\n  ) |&gt;\n  distinct(Participant_ID, .keep_all = TRUE)"
+  },
+  {
+    "objectID": "posts/2026-06-09-domain-relationship-scatter-plots/index.html#figures",
+    "href": "posts/2026-06-09-domain-relationship-scatter-plots/index.html#figures",
+    "title": "Mycobiome-Diet Relationship Exploration",
+    "section": "2 Figures",
+    "text": "2 Figures\n\n2.1 Fiber X Shannon Diversity\n\n\nShow code\nplot_scatter(sample_df, \"Fiber (g)\", \"Shannon\", y_label = \"Shannon diversity\")\n\n\n\n\n\n\n\n\n\n\n\n2.2 Tryptophan X Shannon Diversity\n\n\nShow code\nplot_scatter(sample_df, \"Tryptophan (g)\", \"Shannon\", y_label = \"Shannon diversity\")\n\n\n\n\n\n\n\n\n\n\n\n2.3 Age X Shannon Diversity\n\n\nShow code\nplot_scatter(sample_df, \"Age\", \"Shannon\", y_label = \"Shannon diversity\")\n\n\n\n\n\n\n\n\n\n\n\n2.4 Fiber X Fecal Calprotectin\n\n\nShow code\nplot_scatter(participant_df, \"Fiber (g)\", \"Fecal Calprotectin\")\n\n\n\n\n\n\n\n\n\n\n\n2.5 Tryptophan X Fecal Calprotectin\n\n\nShow code\nplot_scatter(participant_df, \"Tryptophan (g)\", \"Fecal Calprotectin\")"
+  },
+  {
+    "objectID": "posts/2026-06-09-domain-relationship-scatter-plots/index.html#interpretation",
+    "href": "posts/2026-06-09-domain-relationship-scatter-plots/index.html#interpretation",
+    "title": "Mycobiome-Diet Relationship Exploration",
+    "section": "3 Interpretation",
+    "text": "3 Interpretation\nThese figures offer insight into the distributions of various diet-mycobiome variable relationships. The inclusion of a fitted linear model and p-value allows for surface level OLS inference."
+  },
+  {
+    "objectID": "posts/2026-05-19-permanova-species-beta-diversity/index.html",
+    "href": "posts/2026-05-19-permanova-species-beta-diversity/index.html",
+    "title": "PERMANOVA species beta diversity by study group",
+    "section": "",
+    "text": "Does study group (Non-IBD, Active IBD, Quiescent) explain differences in species-level community composition (beta diversity)?\nNull: Centroids (and dispersion, under default adonis2) do not differ among study groups."
+  },
+  {
+    "objectID": "posts/2026-05-19-permanova-species-beta-diversity/index.html#research-question",
+    "href": "posts/2026-05-19-permanova-species-beta-diversity/index.html#research-question",
+    "title": "PERMANOVA species beta diversity by study group",
+    "section": "",
+    "text": "Does study group (Non-IBD, Active IBD, Quiescent) explain differences in species-level community composition (beta diversity)?\nNull: Centroids (and dispersion, under default adonis2) do not differ among study groups."
+  },
+  {
+    "objectID": "posts/2026-05-19-permanova-species-beta-diversity/index.html#data",
+    "href": "posts/2026-05-19-permanova-species-beta-diversity/index.html#data",
+    "title": "PERMANOVA species beta diversity by study group",
+    "section": "2 Data",
+    "text": "2 Data\n\nResponse: Species relative abundance (s__* columns after wide reshape).\nPredictor: Study_group_new.\nUnit: Stool sample (Sample_ID).\nInput: data/processed/species.csv (long format from make save; pivoted via load_taxa_wide()).\nCovariates in this model: none (add to formula if extended later)."
+  },
+  {
+    "objectID": "posts/2026-05-19-permanova-species-beta-diversity/index.html#methods",
+    "href": "posts/2026-05-19-permanova-species-beta-diversity/index.html#methods",
+    "title": "PERMANOVA species beta diversity by study group",
+    "section": "3 Methods",
+    "text": "3 Methods\n\n\n\nItem\nChoice\n\n\n\n\nTest\nPERMANOVA (vegan::adonis2)\n\n\nDistance\nBray–Curtis (vegan::vegdist, method = \"bray\")\n\n\nFormula\ndist_matrix ~ Study_group_new\n\n\nPermutations\n999\n\n\nOrdination (visualization)\nPCoA (stats::cmdscale, k = 2)\n\n\nEllipses\n95% normal ellipses on PCoA (ggplot2::stat_ellipse)"
+  },
+  {
+    "objectID": "posts/2026-05-19-permanova-species-beta-diversity/index.html#assumptions-and-diagnostics",
+    "href": "posts/2026-05-19-permanova-species-beta-diversity/index.html#assumptions-and-diagnostics",
+    "title": "PERMANOVA species beta diversity by study group",
+    "section": "4 Assumptions and diagnostics",
+    "text": "4 Assumptions and diagnostics\n\nPERMANOVA is permutation-based; does not assume multivariate normality.\nHomogeneity of dispersion: not checked in this post; consider betadisper() + permutest() if interpretation hinges on location vs dispersion.\nPseudo-F and R² are reported by adonis2 for the grouping term."
+  },
+  {
+    "objectID": "posts/2026-05-19-permanova-species-beta-diversity/index.html#results",
+    "href": "posts/2026-05-19-permanova-species-beta-diversity/index.html#results",
+    "title": "PERMANOVA species beta diversity by study group",
+    "section": "5 Results",
+    "text": "5 Results\n\n\n\n\n\nTerm\nDf\nSum of squares\nR²\nF\nPr(&gt;F)\n\n\n\n\nModel\n2\n0.2620\n0.1454\n1.1061\n0.266\n\n\nResidual\n13\n1.5398\n0.8546\nNA\nNA\n\n\nTotal\n15\n1.8018\n1.0000\nNA\nNA\n\n\n\n\n\nStudy group explained 14.5% of variance in Species composition (R² = 0.145; pseudo-F = 1.11; p = 0.2660, 999 permutations)."
+  },
+  {
+    "objectID": "posts/2026-05-19-permanova-species-beta-diversity/index.html#figure",
+    "href": "posts/2026-05-19-permanova-species-beta-diversity/index.html#figure",
+    "title": "PERMANOVA species beta diversity by study group",
+    "section": "6 Figure",
+    "text": "6 Figure\nPCoA of Bray–Curtis distances, coloured by study group.\n\n\nShow code\nplot_pcoa_study_group(\n  fit$dist,\n  fit$metadata,\n  permanova_result,\n  cfg$label\n)\n\n\n\n\n\n\n\n\nFigure 1: PCoA of species Bray–Curtis dissimilarity. Points are samples; dashed ellipses are 95% normal ellipses by study group."
+  },
+  {
+    "objectID": "posts/2026-05-19-permanova-species-beta-diversity/index.html#interpretation",
+    "href": "posts/2026-05-19-permanova-species-beta-diversity/index.html#interpretation",
+    "title": "PERMANOVA species beta diversity by study group",
+    "section": "7 Interpretation",
+    "text": "7 Interpretation\nA significant PERMANOVA indicates differences in community composition among study groups in this distance-based framework. Follow-up may include pairwise PERMANOVA, dispersion tests, or differential abundance methods; those should be logged as separate posts."
+  },
+  {
+    "objectID": "posts/2026-05-19-permanova-species-beta-diversity/index.html#reproducibility",
+    "href": "posts/2026-05-19-permanova-species-beta-diversity/index.html#reproducibility",
+    "title": "PERMANOVA species beta diversity by study group",
+    "section": "8 Reproducibility",
+    "text": "8 Reproducibility\n\nNotebook: notebooks/permanova.Rmd\nHelpers: stats/R/permanova_helpers.R\nPipeline: make wrangle → make save\nRender site: quarto render stats from repository root"
+  },
+  {
+    "objectID": "posts/2026-05-29-evidence-ranking-disease-group/index.html",
+    "href": "posts/2026-05-29-evidence-ranking-disease-group/index.html",
+    "title": "Evidence-ranking matrix for disease-group findings",
+    "section": "",
+    "text": "Which disease-group (Study_group_new) findings are strongest candidates for future validation?\nWe synthesize tests already run across the capstone pipeline into a single evidence-ranking matrix, ordered by a transparent score combining p-value and effect size."
+  },
+  {
+    "objectID": "posts/2026-05-29-evidence-ranking-disease-group/index.html#research-question",
+    "href": "posts/2026-05-29-evidence-ranking-disease-group/index.html#research-question",
+    "title": "Evidence-ranking matrix for disease-group findings",
+    "section": "",
+    "text": "Which disease-group (Study_group_new) findings are strongest candidates for future validation?\nWe synthesize tests already run across the capstone pipeline into a single evidence-ranking matrix, ordered by a transparent score combining p-value and effect size."
+  },
+  {
+    "objectID": "posts/2026-05-29-evidence-ranking-disease-group/index.html#data-and-inputs",
+    "href": "posts/2026-05-29-evidence-ranking-disease-group/index.html#data-and-inputs",
+    "title": "Evidence-ranking matrix for disease-group findings",
+    "section": "2 Data and inputs",
+    "text": "2 Data and inputs\n\n\n\n\n\n\n\n\nDomain\nTests included\nPrimary inputs\n\n\n\n\nMycobiome (beta)\nPERMANOVA × taxonomic level\ndata/processed/{phylum,family,genus,species}.csv\n\n\nMycobiome (alpha)\nKruskal–Wallis × diversity metric\ndata/intermediate/alpha_long.rds\n\n\nDiet\nKruskal–Wallis × nutrient\ndata/processed/dietary_cleaned.xlsx + mycobiome metadata\n\n\nSymptoms\nKruskal–Wallis × symptom score\ndata/processed/cleaned_characteristics.csv + mycobiome metadata\n\n\n\n\nComparison: Active IBD vs Quiescent vs Non-IBD (Study_group_new).\nUnit: Sample-level for mycobiome; participant-level for diet and symptoms (diet/symptoms joined to mycobiome participants).\nNot included here: Continuous symptom–composition associations (Spearman/PERMANOVA on HBI), stratified nutrient–diversity Spearman, or unsupervised PCA clusters — see linked posts below.\n\nSummary: 24 study-group comparisons ranked; 1 with p &lt; 0.05; 1 tagged High priority."
+  },
+  {
+    "objectID": "posts/2026-05-29-evidence-ranking-disease-group/index.html#methods",
+    "href": "posts/2026-05-29-evidence-ranking-disease-group/index.html#methods",
+    "title": "Evidence-ranking matrix for disease-group findings",
+    "section": "3 Methods",
+    "text": "3 Methods\n\n\n\n\n\n\n\nItem\nChoice\n\n\n\n\nIntegration\nRecompute or aggregate from processed/intermediate files (same sources as individual posts)\n\n\nBeta diversity\nPERMANOVA (adonis2), Bray–Curtis, 999 permutations; effect = R²\n\n\nAlpha, diet, symptoms\nKruskal–Wallis; effect = η²[H] (rstatix::kruskal_effsize)\n\n\nEvidence score\n−log₁₀(p) × (0.5 + 0.5 × effect_scaled) with R² or η²[H] capped at 1\n\n\nValidation tier\nHigh: p &lt; 0.05 and score ≥ 75th percentile among significant; Medium: p &lt; 0.05; Suggestive: p &lt; 0.10; Low: otherwise\n\n\nMultiplicity\nExploratory ranking; no global FDR across all rows\n\n\n\n\n\nShow code\ntop_validation &lt;- ranked |&gt;\n  filter(validation_tier %in% c(\"High\", \"Medium\")) |&gt;\n  slice_head(n = 10)"
+  },
+  {
+    "objectID": "posts/2026-05-29-evidence-ranking-disease-group/index.html#results",
+    "href": "posts/2026-05-29-evidence-ranking-disease-group/index.html#results",
+    "title": "Evidence-ranking matrix for disease-group findings",
+    "section": "4 Results",
+    "text": "4 Results\n\n4.1 Full evidence-ranking matrix\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nRank\nTier\nDomain\nFeature\nTest\nEffect\nStatistic\np\nn\nEvidence score\nSource post\n\n\n\n\n1\nHigh\nSymptoms (survey)\nHarvey-Bradshaw Index\nKruskal–Wallis\nη²[H] = 0.924\n10.3150\n0.0058\n12\n2.1544\n2026-05-22-symptoms-fungal-composition\n\n\n2\nSuggestive\nDiet (nutrients)\nAdded sugar (g/day)\nKruskal–Wallis\nη²[H] = 0.423\n5.8077\n0.0548\n12\n0.8974\n2026-05-29-nutrients-diversity-disease-group\n\n\n3\nLow\nMycobiome (alpha diversity)\nShannon diversity\nKruskal–Wallis\nη²[H] = 0.116\n3.5103\n0.1730\n16\n0.4252\n2026-05-19-alpha-diversity-kruskal-wallis\n\n\n4\nLow\nDiet (nutrients)\nFat (g/day)\nKruskal–Wallis\nη²[H] = 0.137\n3.2308\n0.1990\n12\n0.3985\n2026-05-29-nutrients-diversity-disease-group\n\n\n5\nLow\nMycobiome (beta diversity)\nSpecies composition\nPERMANOVA (Bray–Curtis)\nR² = 0.145\n1.1061\n0.2660\n16\n0.3294\n2026-05-19-permanova-species-beta-diversity\n\n\n6\nLow\nMycobiome (beta diversity)\nFamily composition\nPERMANOVA (Bray–Curtis)\nR² = 0.142\n1.0773\n0.3730\n16\n0.2446\n2026-05-19-permanova-family-beta-diversity\n\n\n7\nLow\nMycobiome (beta diversity)\nPhylum composition\nPERMANOVA (Bray–Curtis)\nR² = 0.140\n1.0613\n0.4120\n16\n0.2196\n2026-05-19-permanova-phylum-beta-diversity\n\n\n8\nLow\nDiet (nutrients)\nVitamin D (mcg/day)\nKruskal–Wallis\nη²[H] = 0.000\n2.0000\n0.3680\n12\n0.2171\n2026-05-29-nutrients-diversity-disease-group\n\n\n9\nLow\nDiet (nutrients)\nSugar (g/day)\nKruskal–Wallis\nη²[H] = -0.013\n1.8846\n0.3900\n12\n0.2045\n2026-05-29-nutrients-diversity-disease-group\n\n\n10\nLow\nDiet (nutrients)\nOmega-6 (g/day)\nKruskal–Wallis\nη²[H] = -0.013\n1.8846\n0.3900\n12\n0.2045\n2026-05-29-nutrients-diversity-disease-group\n\n\n11\nLow\nDiet (nutrients)\nCalories (kcal/day)\nKruskal–Wallis\nη²[H] = -0.056\n1.5000\n0.4720\n12\n0.1630\n2026-05-29-nutrients-diversity-disease-group\n\n\n12\nLow\nMycobiome (alpha diversity)\nChao1 diversity\nKruskal–Wallis\nη²[H] = -0.039\n1.4941\n0.4740\n16\n0.1621\n2026-05-19-alpha-diversity-kruskal-wallis\n\n\n13\nLow\nMycobiome (alpha diversity)\nSimpson diversity\nKruskal–Wallis\nη²[H] = -0.043\n1.4412\n0.4860\n16\n0.1567\n2026-05-19-alpha-diversity-kruskal-wallis\n\n\n14\nLow\nDiet (nutrients)\nFolate (mcg/day)\nKruskal–Wallis\nη²[H] = -0.064\n1.4231\n0.4910\n12\n0.1545\n2026-05-29-nutrients-diversity-disease-group\n\n\n15\nLow\nDiet (nutrients)\nArtificial sweeteners (mg/day)\nKruskal–Wallis\nη²[H] = -0.090\n1.1923\n0.5510\n12\n0.1294\n2026-05-29-nutrients-diversity-disease-group\n\n\n16\nLow\nSymptoms (survey)\nFatigue frequency\nKruskal–Wallis\nη²[H] = -0.098\n1.1200\n0.5710\n12\n0.1217\n2026-05-22-symptoms-fungal-composition\n\n\n17\nLow\nSymptoms (survey)\nAbdominal pain\nKruskal–Wallis\nη²[H] = -0.146\n0.6875\n0.7090\n12\n0.0747\n2026-05-22-symptoms-fungal-composition\n\n\n18\nLow\nDiet (nutrients)\nTryptophan (g/day)\nKruskal–Wallis\nη²[H] = -0.171\n0.4615\n0.7940\n12\n0.0501\n2026-05-29-nutrients-diversity-disease-group\n\n\n19\nLow\nMycobiome (beta diversity)\nGenus composition\nPERMANOVA (Bray–Curtis)\nR² = 0.108\n0.7896\n0.8520\n16\n0.0385\n2026-05-19-permanova-genus-beta-diversity\n\n\n20\nLow\nDiet (nutrients)\nOmega-3 (g/day)\nKruskal–Wallis\nη²[H] = -0.192\n0.2692\n0.8740\n12\n0.0292\n2026-05-29-nutrients-diversity-disease-group\n\n\n21\nLow\nSymptoms (survey)\nAnxiety frequency\nKruskal–Wallis\nη²[H] = -0.204\n0.1600\n0.9230\n12\n0.0174\n2026-05-22-symptoms-fungal-composition\n\n\n22\nLow\nSymptoms (survey)\nAbdominal bloating frequency\nKruskal–Wallis\nη²[H] = -0.204\n0.1600\n0.9230\n12\n0.0174\n2026-05-22-symptoms-fungal-composition\n\n\n23\nLow\nDiet (nutrients)\nTotal fiber (g/day)\nKruskal–Wallis\nη²[H] = -0.205\n0.1538\n0.9260\n12\n0.0167\n2026-05-29-nutrients-diversity-disease-group\n\n\n24\nLow\nSymptoms (survey)\nDaily soft stools\nKruskal–Wallis\nη²[H] = -0.222\n0.0000\n1.0000\n12\n0.0000\n2026-05-22-symptoms-fungal-composition\n\n\n\n\n\n\n\n4.2 Top candidates for future validation\n\n\n\nHighest-priority findings (High or Medium tier, top 10 by evidence score)\n\n\n\n\n\n\n\n\n\n\n\n\nrank\nvalidation_tier\ndomain\nfeature\ntest\neffect_label\np\nevidence_score\n\n\n\n\n1\nHigh\nSymptoms (survey)\nHarvey-Bradshaw Index\nKruskal–Wallis\nη²[H] = 0.924\n0.0058\n2.1544\n\n\n\n\n\nTop validation candidates:\n\n[High] Symptoms (survey) — Harvey-Bradshaw Index (η²[H] = 0.924, Kruskal–Wallis, p = 0.0058, score = 2.15)\n\n\n\n4.3 By domain (mean evidence score)\n\n\n\n\n\n\n\n\n\n\n\n\nDomain\nTests\np &lt; 0.05\nMean evidence score\nTop feature\n\n\n\n\nDiet (nutrients)\n11\n0\n0.224\nAdded sugar (g/day)\n\n\nMycobiome (alpha diversity)\n3\n0\n0.248\nShannon diversity\n\n\nMycobiome (beta diversity)\n4\n0\n0.208\nSpecies composition\n\n\nSymptoms (survey)\n6\n1\n0.398\nHarvey-Bradshaw Index"
+  },
+  {
+    "objectID": "posts/2026-05-29-evidence-ranking-disease-group/index.html#figure",
+    "href": "posts/2026-05-29-evidence-ranking-disease-group/index.html#figure",
+    "title": "Evidence-ranking matrix for disease-group findings",
+    "section": "5 Figure",
+    "text": "5 Figure\n\n\nShow code\nplot_evidence_heatmap(ranked, top_n = min(20L, nrow(ranked)))\n\n\n\n\n\n\n\n\nFigure 1: Evidence scores for the top 20 study-group comparisons. Higher scores indicate stronger statistical support for validation."
+  },
+  {
+    "objectID": "posts/2026-05-29-evidence-ranking-disease-group/index.html#interpretation",
+    "href": "posts/2026-05-29-evidence-ranking-disease-group/index.html#interpretation",
+    "title": "Evidence-ranking matrix for disease-group findings",
+    "section": "6 Interpretation",
+    "text": "6 Interpretation\nThe matrix does not replace individual analysis posts; it prioritizes which disease-group contrasts to carry forward (e.g. pre-registration, larger cohort, or experimental follow-up).\nHigh tier findings combine statistical significance with relatively large R² (composition) or η²[H] (rank-based outcomes). Low tier rows may still be biologically interesting but need replication. Domains with few participants (especially diet and symptoms) should be interpreted cautiously.\n\n6.1 Related analyses (not in this matrix)\n\n\n\n\n\n\n\nTopic\nPost\n\n\n\n\nSymptom × diversity (Spearman, HBI PERMANOVA)\n2026-05-22-symptoms-fungal-composition\n\n\nNutrient × diversity (stratified Spearman)\n2026-05-29-nutrients-diversity-disease-group\n\n\nDiet + mycobiome PCA / clustering\n2026-05-29-diet-mycobiome-pca-clustering"
+  },
+  {
+    "objectID": "posts/2026-05-29-evidence-ranking-disease-group/index.html#reproducibility",
+    "href": "posts/2026-05-29-evidence-ranking-disease-group/index.html#reproducibility",
+    "title": "Evidence-ranking matrix for disease-group findings",
+    "section": "7 Reproducibility",
+    "text": "7 Reproducibility\n\nHelpers: stats/R/evidence_ranking_helpers.R\nRender: quarto render stats from repository root"
+  },
+  {
+    "objectID": "posts/2026-06-08-outlier-removal-and-unidentified-organisms/index.html",
+    "href": "posts/2026-06-08-outlier-removal-and-unidentified-organisms/index.html",
+    "title": "Mycobiome Identification and Outliers",
+    "section": "",
+    "text": "The mycobiome metadata cleaning process involves standardizing participant metadata, including harmonizing participant IDs and attaching metadata to all microbiome datasets. Taxonomic abundance data is converted to long format, alpha diversity data is cleaned and reshaped, outlier removal is carried out on two distinct criteria as a part of both aforementioned cleaning processes. Inflammatory biomarker data are standardized by cleaning variable names, converting dates and laboratory values to appropriate formats, and flagging CRP measurements below the detection limit. The resulting cleaned datasets are then saved for subsequent analyses.\n\n\nOutlier removal consists of two criterion (only one must be met to classify an outlier): &gt;99% of all organisms are unidentified, mycobiome diversity exceeds 1.5 * IQR."
+  },
+  {
+    "objectID": "posts/2026-06-08-outlier-removal-and-unidentified-organisms/index.html#mycobiome-data-cleaning-process",
+    "href": "posts/2026-06-08-outlier-removal-and-unidentified-organisms/index.html#mycobiome-data-cleaning-process",
+    "title": "Mycobiome Identification and Outliers",
+    "section": "",
+    "text": "The mycobiome metadata cleaning process involves standardizing participant metadata, including harmonizing participant IDs and attaching metadata to all microbiome datasets. Taxonomic abundance data is converted to long format, alpha diversity data is cleaned and reshaped, outlier removal is carried out on two distinct criteria as a part of both aforementioned cleaning processes. Inflammatory biomarker data are standardized by cleaning variable names, converting dates and laboratory values to appropriate formats, and flagging CRP measurements below the detection limit. The resulting cleaned datasets are then saved for subsequent analyses.\n\n\nOutlier removal consists of two criterion (only one must be met to classify an outlier): &gt;99% of all organisms are unidentified, mycobiome diversity exceeds 1.5 * IQR."
+  },
+  {
+    "objectID": "posts/2026-06-08-outlier-removal-and-unidentified-organisms/index.html#proportion-of-unidentified-organisms-figure",
+    "href": "posts/2026-06-08-outlier-removal-and-unidentified-organisms/index.html#proportion-of-unidentified-organisms-figure",
+    "title": "Mycobiome Identification and Outliers",
+    "section": "2 Proportion of Unidentified Organisms Figure",
+    "text": "2 Proportion of Unidentified Organisms Figure"
+  },
+  {
+    "objectID": "posts/2026-06-08-outlier-removal-and-unidentified-organisms/index.html#relative-abundance",
+    "href": "posts/2026-06-08-outlier-removal-and-unidentified-organisms/index.html#relative-abundance",
+    "title": "Mycobiome Identification and Outliers",
+    "section": "3 Relative Abundance",
+    "text": "3 Relative Abundance\n\n3.1 Phylum\n\n\n\n3.2 Family\n\n\n\n3.3 Genus\n\n\n\n3.4 Species"
+  },
+  {
+    "objectID": "pre-specified.html",
+    "href": "pre-specified.html",
+    "title": "Pre-specified Tests",
+    "section": "",
+    "text": "Hypothesis tests where the null, method, and significance threshold were committed before results were seen. Outputs are frozen after first execution — re-run a single analysis with make stats-&lt;target&gt;, then make stats to rebuild the site.\n\n\n\n\n\n\n\nAnalysis\nMakefile target\n\n\n\n\nAlpha diversity (Kruskal–Wallis)\nmake stats-diversity\n\n\nBeta diversity (PERMANOVA × taxonomic level)\nmake stats-permanova\n\n\nSymptoms × fungal composition (Spearman + PERMANOVA)\nmake stats-symptoms\n\n\nNutrients × diversity by disease group (Spearman)\nmake stats-nutrients\n\n\nDiet + mycobiome PCA / clustering\nmake stats-pca\n\n\nEvidence-ranking matrix (validation priority)\nmake stats-evidence\n\n\n\n\n\n\n\n\n\n\n\n\nMycobiome-Diet Relationship Exploration\n\n\n\nmycobiome\n\ndiet\n\npre-specified\n\n\n\nStatistical figures covering relationships between key dietary and mycobiome markers.\n\n\n\n\n\nJun 9, 2026\n\n\n\n\n\n\n\nNutrients vs fungal diversity by disease group (Spearman)\n\n\n\npre-specified\n\nalpha-diversity\n\ndiet\n\nnutrients\n\n\n\nSpearman correlations between dietary nutrients and alpha diversity, overall and stratified by study group (Active IBD, Quiescent, Non-IBD).\n\n\n\n\n\nMay 29, 2026\n\n\n\n\n\n\n\nPCA and clustering on combined diet and mycobiome profiles\n\n\n\npre-specified\n\npca\n\nclustering\n\ndiet\n\ngenus\n\n\n\nParticipant-level PCA of scaled nutrient intake and genus relative abundance, with hierarchical clustering to explore diet–mycobiome groupings.\n\n\n\n\n\nMay 29, 2026\n\n\n\n\n\n\n\nEvidence-ranking matrix for disease-group findings\n\n\n\npre-specified\n\nsynthesis\n\nvalidation\n\n\n\nRanks the strongest diet, mycobiome, and symptom differences across Study_group_new to prioritize candidates for future validation.\n\n\n\n\n\nMay 29, 2026\n\n\n\n\n\n\n\nSymptom scores vs fungal composition (Spearman and PERMANOVA)\n\n\n\npre-specified\n\nalpha-diversity\n\nbeta-diversity\n\ngenus\n\nsymptoms\n\n\n\nSurvey symptom scores (HBI and related items) tested against alpha diversity (Spearman) and genus beta diversity (PERMANOVA on Bray–Curtis).\n\n\n\n\n\nMay 22, 2026\n\n\n\n\n\n\n\nPERMANOVA phylum beta diversity by study group\n\n\n\npermanova\n\nbeta-diversity\n\nphylum\n\npre-specified\n\n\n\nBray–Curtis dissimilarity on phylum relative abundance; study-group effect tested with permutational MANOVA.\n\n\n\n\n\nMay 19, 2026\n\n\n\n\n\n\n\nPERMANOVA genus beta diversity by study group\n\n\n\npermanova\n\nbeta-diversity\n\ngenus\n\npre-specified\n\n\n\nBray–Curtis dissimilarity on genus relative abundance; study-group effect tested with permutational MANOVA.\n\n\n\n\n\nMay 19, 2026\n\n\n\n\n\n\n\nPERMANOVA species beta diversity by study group\n\n\n\npermanova\n\nbeta-diversity\n\nspecies\n\npre-specified\n\n\n\nBray–Curtis dissimilarity on species relative abundance; group effect tested with permutational MANOVA.\n\n\n\n\n\nMay 19, 2026\n\n\n\n\n\n\n\nKruskal–Wallis alpha diversity by study group and fibre restriction\n\n\n\nalpha-diversity\n\npre-specified\n\n\n\nNon-parametric comparison of Shannon, richness, and other alpha metrics across study group and fibre-restriction levels.\n\n\n\n\n\nMay 19, 2026\n\n\n\n\n\n\n\nPERMANOVA family beta diversity by study group\n\n\n\npermanova\n\nbeta-diversity\n\nfamily\n\npre-specified\n\n\n\nBray–Curtis dissimilarity on family relative abundance; study-group effect tested with permutational MANOVA.\n\n\n\n\n\nMay 19, 2026\n\n\n\n\n\nNo matching items"
+  }
+]

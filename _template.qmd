@@ -1,0 +1,97 @@
+---
+title: "Short title of the test"
+description: "One sentence: what was tested and on which outcome."
+date: 2026-05-19
+categories: [exploratory]
+author: "IBD Capstone Team"
+freeze: true
+---
+
+## Research question
+
+What hypothesis does this test address? State the null in plain language.
+
+## Data
+
+- **Outcome / response:**
+- **Predictor(s):**
+- **Unit of analysis:** (sample, participant, day, …)
+- **N:** 
+- **Input file(s):** `data/processed/...` or `data/intermediate/...`
+- **Inclusion / exclusion:** (e.g. samples removed in `02_data_wrangling.R`)
+
+## Methods
+
+| Item | Choice |
+|------|--------|
+| Test | e.g. Kruskal–Wallis, PERMANOVA (`adonis2`) |
+| R package | e.g. `vegan`, `rstatix` |
+| Formula | `Value ~ Study_group_new` |
+| Distance / link | (if applicable) Bray–Curtis |
+| Permutations | (if applicable) 999 |
+| Multiple testing | none / BH across metrics |
+| Significance | α = 0.05 |
+
+```{r}
+#| label: setup
+#| include: false
+library(dplyr)
+library(here)
+
+# here::i_am() forces here to anchor to stats/ (where stats/.here lives) regardless of how
+# the document is opened. Without it, interactive IDE sessions anchor to the .Rproj root
+# Replace the path below with this post's directory name.
+here::i_am("posts/<post-directory-name>/index.qmd")
+# library(...)  # add packages used below
+```
+
+```{r}
+#| label: run-test
+# Load data and run the test. Keep parameters explicit for reproducibility.
+# result <- ...
+```
+
+## Assumptions and diagnostics
+
+- Independence:
+- Exchangeability / rank-based:
+- Other checks performed:
+
+## Results
+
+```{r}
+#| label: results-table
+#| echo: false
+# knitr::kable(result, digits = 4)
+```
+
+**Summary in words:** (e.g. “Shannon diversity differed by study group, χ²(2) = …, p = …”.)
+
+## Figure
+
+```{r}
+#| label: fig-main
+#| fig-cap: "Caption describing what the plot shows."
+#| fig-width: 7
+#| fig-height: 5
+#| fig-align: center
+# ggplot(...) + ...
+```
+
+Optional: save a static copy for slides or the manuscript.
+
+```{r}
+#| label: save-figure
+#| eval: false
+# ggsave(here("figures", "my-test.png"), width = 7, height = 5, dpi = 300)
+```
+
+## Interpretation
+
+What can and cannot be concluded from this test?
+
+## Reproducibility
+
+- **Script / notebook:** `path/to/script.R` or `notebooks/....Rmd`
+- **Rendered:** `quarto render stats` from repository root
+- **Session:** see footer when `freeze: false` on first render

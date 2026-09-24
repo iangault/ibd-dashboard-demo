@@ -1,0 +1,45 @@
+[
+  {
+    "listing": "/eda.html",
+    "items": [
+      "/posts/2026-06-16-characteristics-missingness/index.html",
+      "/posts/2026-06-08-outlier-removal-and-unidentified-organisms/index.html",
+      "/posts/2026-06-01-dietary-eda/index.html",
+      "/posts/2026-05-26-heatmap/index.html"
+    ]
+  },
+  {
+    "listing": "/index.html",
+    "items": [
+      "/posts/2026-06-16-characteristics-missingness/index.html",
+      "/posts/2026-06-09-domain-relationship-scatter-plots/index.html",
+      "/posts/2026-06-08-outlier-removal-and-unidentified-organisms/index.html",
+      "/posts/2026-06-01-dietary-eda/index.html",
+      "/posts/2026-05-29-nutrients-diversity-disease-group/index.html",
+      "/posts/2026-05-29-diet-mycobiome-pca-clustering/index.html",
+      "/posts/2026-05-29-evidence-ranking-disease-group/index.html",
+      "/posts/2026-05-26-heatmap/index.html",
+      "/posts/2026-05-22-symptoms-fungal-composition/index.html",
+      "/posts/2026-05-19-permanova-phylum-beta-diversity/index.html",
+      "/posts/2026-05-19-permanova-genus-beta-diversity/index.html",
+      "/posts/2026-05-19-permanova-species-beta-diversity/index.html",
+      "/posts/2026-05-19-alpha-diversity-kruskal-wallis/index.html",
+      "/posts/2026-05-19-permanova-family-beta-diversity/index.html"
+    ]
+  },
+  {
+    "listing": "/pre-specified.html",
+    "items": [
+      "/posts/2026-06-09-domain-relationship-scatter-plots/index.html",
+      "/posts/2026-05-29-nutrients-diversity-disease-group/index.html",
+      "/posts/2026-05-29-diet-mycobiome-pca-clustering/index.html",
+      "/posts/2026-05-29-evidence-ranking-disease-group/index.html",
+      "/posts/2026-05-22-symptoms-fungal-composition/index.html",
+      "/posts/2026-05-19-permanova-phylum-beta-diversity/index.html",
+      "/posts/2026-05-19-permanova-genus-beta-diversity/index.html",
+      "/posts/2026-05-19-permanova-species-beta-diversity/index.html",
+      "/posts/2026-05-19-alpha-diversity-kruskal-wallis/index.html",
+      "/posts/2026-05-19-permanova-family-beta-diversity/index.html"
+    ]
+  }
+]
