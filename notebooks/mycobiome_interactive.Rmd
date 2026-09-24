@@ -1,0 +1,405 @@
+---
+title: "Mycobiome Exploration"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: hide
+---
+
+# Introduction
+
+This notebook is an artifact of the initial exploration of the data. Parts of the core pipeline were derived from this notebook; however, it does not reflect the current analysis. Please interpret with caution. It is included in the repo for informational purposes. The input data is derived from the core pipeline, and could be rerun manually to reflect current data.
+
+### Rationale for exploratory association analyses
+
+How to integrate microbiome, dietary, and clinical metadata to identify microbial signatures associated with inflammation or dietary patterns.
+
+Explore Continuous-by-continuous comparisons:
+
+- Scatterplots to examine whether fungal diversity or candidate fungal taxa vary with continuous dietary or character variables.
+
+- diversity x fiber intake, candidate fungal abundance x nutrient variables
+
+- Inflammation / IBD potential candidates: increase in *Candida albicans*, decrease in *Saccharomyces cerevisiae*, *Saccharomyces*, *Candida*, and the Basidiomycota:Ascomycota ratio.
+
+Categorical-by-continuous comparisons:
+
+- Box plots of fungal diversity or candidate taxa across disease activity groups or HBI score.
+
+Candidate fungal features in literature: *Candida albicans*, *Saccharomyces cerevisiae*, *Saccharomyces*, *Candida*, and the Basidiomycota:Ascomycota ratio.
+
+**Note on replicates:** At the time of analysis, 10 of 12 participants contributed 2 stool samples (technical replicates, same timepoint, identical dietary/clinical metadata). Mycobiome and diversity plots use all 22 samples; inflammatory marker plots use one row per participant to avoid pseudo-replication.
+
+# Setup
+
+```{r setup, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(fig.height = 5)
+library(dplyr)
+library(ggplot2)
+library(ggridges)
+library(plotly)
+library(here)
+library(readr)
+library(readxl)
+
+rm(list = ls())
+
+# ── Data sources ──────────────────────────────────────────────
+taxa_long  <- readRDS(here("data", "intermediate", "taxa_long_list.rds"))
+inflam <- readRDS(here("data", "intermediate", "inflammatory_markers.rds")) |>
+  rename(participant_id = Participant_ID)
+merged     <- read_csv(here("data", "processed", "merged.csv"),
+                       show_col_types = FALSE)
+
+# ── Palettes ──────────────────────────────────────────────────
+group_pal <- c(
+  "Active IBD" = "#D62728",
+  "Quiescent"  = "#FF7F0E",
+  "Non-IBD"    = "#2CA02C"
+)
+
+hbi_pal <- c(
+  "Remission"       = "#2CA02C",
+  "Mild"            = "#FF7F0E",
+  "Moderate/Severe" = "#D62728"
+)
+
+# ── Derived mycobiome column ───────────────────────────────────
+merged <- merged |>
+  mutate(ratio_basidio_asco = p__Basidiomycota / (p__Ascomycota + 1e-6))
+
+# ── sample_df: sample-level (22 rows) ─────────────────────────
+# Use for diversity / mycobiome analyses where each sample is an
+# independent observation (both replicates per participant kept).
+sample_df <- merged |>
+  rename(Disease_status = Study_group_new) |>
+  rename(
+    `Fiber (g)`                  = `TotFib (g)`,
+    `Tryptophan (g)`             = `Trp (g)`,
+    `Artificial sweeteners (mg)` = `ArtSw (mg)`,
+    `Calories (kcal)`            = `Cals (kcal)`,
+    Age                          = age,
+    BMI                          = bmi_1,
+    `Harvey-Bradshaw Index`      = harvey_bradshaw_index
+  ) |>
+  mutate(
+    HBI_category = case_when(
+      `Harvey-Bradshaw Index` <= 4 ~ "Remission",
+      `Harvey-Bradshaw Index` <= 7 ~ "Mild",
+      `Harvey-Bradshaw Index`  > 7 ~ "Moderate/Severe"
+    ),
+    HBI_category = factor(HBI_category,
+                          levels = c("Remission", "Mild", "Moderate/Severe"))
+  )
+
+# ── participant_df: participant-level (one row per participant) ─
+# Use for inflammatory marker analyses to avoid artificial
+# duplication from the 2-replicate-per-participant design.
+participant_df <- sample_df |>
+  left_join(
+    inflam |> select(participant_id, fecal_calprotectin, crp),
+    by = "participant_id"
+  ) |>
+  rename(
+    `Fecal Calprotectin` = fecal_calprotectin,
+    CRP                  = crp
+  ) |>
+  distinct(participant_id, .keep_all = TRUE)
+```
+
+------------------------------------------------------------------------
+
+# Population
+
+## Sample coverage
+
+```{r coverage}
+tibble(
+  total_samples        = n_distinct(merged$sample_id),
+  total_participants   = n_distinct(merged$participant_id),
+  samples_with_alpha   = sum(!is.na(merged$Shannon)),
+  participants_inflam  = n_distinct(inflam$participant_id),
+  participants_in_both = length(intersect(
+    unique(merged$participant_id),
+    unique(inflam$participant_id)
+  ))
+)
+```
+
+------------------------------------------------------------------------
+
+# Scatter — dietary / characteristics × diversity or mycobiome
+
+Potential indicators of inflammation?
+
+```{r scatter-fn}
+# Helper: scatter + smoother coloured by disease status; Spearman ρ in subtitle
+plot_scatter <- function(df, x_col, y_col, x_label = x_col, y_label = y_col) {
+  plot_data <- df |> filter(!is.na(.data[[x_col]]), !is.na(.data[[y_col]]))
+
+  rho <- cor(plot_data[[x_col]], plot_data[[y_col]],
+             method = "spearman", use = "complete.obs")
+  sub <- paste0("Spearman ρ = ", round(rho, 3))
+
+  p <- plot_data |>
+    ggplot(aes(
+      x      = .data[[x_col]],
+      y      = .data[[y_col]],
+      colour = Disease_status,
+      text   = paste0(
+        "ID: ", participant_id, "<br>",
+        x_label, ": ", round(.data[[x_col]], 2), "<br>",
+        y_label, ": ", round(.data[[y_col]], 4)
+      )
+    )) +
+    geom_point(size = 2.5) +
+    # geom_smooth(method = "lm", se = TRUE, aes(group = 1),
+    #             colour = "grey40", linewidth = 0.7) +
+    scale_colour_manual(values = group_pal, name = "Disease status") +
+    labs(x = x_label, y = y_label) +
+    theme_minimal()
+
+  ggplotly(p, tooltip = "text", height = 500) |>
+    layout(
+      margin = list(t = 80, b = 150),
+      title  = list(text = paste0(x_label, " × ", y_label,
+                                  "<br><sup>", sub, "</sup>"))
+    )
+}
+```
+
+### Fiber × diversity
+
+```{r scatter-fiber-diversity}
+plot_scatter(sample_df, "Fiber (g)", "Shannon", y_label = "Shannon diversity")
+```
+
+### Tryptophan × diversity
+
+```{r scatter-trp-diversity}
+plot_scatter(sample_df, "Tryptophan (g)", "Shannon", y_label = "Shannon diversity")
+```
+
+### Age × diversity
+
+```{r scatter-age-diversity}
+plot_scatter(sample_df, "Age", "Shannon", y_label = "Shannon diversity")
+```
+
+### Fiber × Fecal Calprotectin
+
+*One row per participant (replicates collapsed).*
+
+```{r scatter-fiber-calprotectin}
+plot_scatter(participant_df, "Fiber (g)", "Fecal Calprotectin")
+```
+
+### Tryptophan × Fecal Calprotectin
+
+```{r scatter-trp-calprotectin}
+plot_scatter(participant_df, "Tryptophan (g)", "Fecal Calprotectin")
+```
+
+### CRP × Fecal Calprotectin
+
+```{r scatter-crp-calprotectin}
+# correlation between the two inflammatory markers
+plot_corr <- function(df, x_col, y_col, x_label = x_col, y_label = y_col) {
+  plot_data <- df |> filter(!is.na(.data[[x_col]]), !is.na(.data[[y_col]]))
+
+  rho <- cor(plot_data[[x_col]], plot_data[[y_col]],
+             method = "spearman", use = "complete.obs")
+  sub <- paste0("Spearman ρ = ", round(rho, 3))
+
+  p <- plot_data |>
+    ggplot(aes(
+      x    = .data[[x_col]],
+      y    = .data[[y_col]],
+      text = paste0("ID: ", participant_id, "<br>",
+                    x_label, ": ", round(.data[[x_col]], 4), "<br>",
+                    y_label, ": ", round(.data[[y_col]], 4))
+    )) +
+    geom_point(alpha = 0.7, size = 2) +
+    geom_smooth(method = "lm", se = TRUE, colour = "steelblue") +
+    labs(x = x_label, y = y_label) +
+    theme_minimal()
+
+  ggplotly(p, tooltip = "text", height = 500) |>
+    layout(
+      margin = list(t = 80, b = 150),
+      title  = list(text = paste0(x_label, " × ", y_label,
+                                  "<br><sup>", sub, "</sup>"))
+    )
+}
+
+```
+
+```{r}
+
+plot_corr(participant_df, "CRP", "Fecal Calprotectin",
+          x_label = "CRP (mg/L)", y_label = "Fecal Calprotectin (µg/g)")
+```
+
+------------------------------------------------------------------------
+
+# Boxplots — study group distributions
+
+```{r box-fn}
+plot_box <- function(df,
+                     y_col,
+                     x_col      = "Disease_status",
+                     fill_col   = x_col,
+                     pal        = group_pal,
+                     x_label    = x_col,
+                     y_label    = y_col,
+                     filter_col = NULL,
+                     filter_val = NULL) {
+  if (!is.null(filter_col) && !is.null(filter_val)) {
+    df <- df |> filter(.data[[filter_col]] != filter_val)
+  }
+  df <- df |> filter(!is.na(.data[[x_col]]), !is.na(.data[[y_col]]))
+
+  p <- df |>
+    ggplot(aes(
+      x    = .data[[x_col]],
+      y    = .data[[y_col]],
+      fill = .data[[fill_col]],
+      text = paste0("ID: ", participant_id, "<br>",
+                    y_label, ": ", round(.data[[y_col]], 4))
+    )) +
+    geom_boxplot(alpha = 0.5, outlier.shape = NA, width = 0.5) +
+    geom_jitter(width = 0.08, size = 2, alpha = 0.8) +
+    labs(x = x_label, y = y_label) +
+    theme_minimal()
+
+  if (!is.null(pal)) {
+    p <- p + scale_fill_manual(values = pal, guide = "none")
+  } else {
+    p <- p + guides(fill = "none")
+  }
+
+  ggplotly(p, tooltip = "text")
+}
+```
+
+### Shannon diversity by study group
+
+```{r box-shannon}
+plot_box(sample_df, "Shannon", y_label = "Shannon diversity")
+```
+
+### C. albicans by study group
+
+```{r box-albicans}
+plot_box(sample_df |> filter(participant_id != "SYN_39"),
+         "s__albicans", y_label = "C. albicans abundance")
+```
+
+### S. cerevisiae by study group
+
+```{r box-scer}
+plot_box(sample_df |> filter(participant_id != "SYN_39"),
+         "s__cerevisiae", y_label = "S. cerevisiae abundance")
+```
+
+### Basidio:Asco ratio by study group
+
+```{r box-ratio}
+plot_box(sample_df |> filter(participant_id != "SYN_39"),
+         "ratio_basidio_asco", y_label = "Basidiomycota / Ascomycota")
+```
+
+### Fiber by study group
+
+```{r box-fiber}
+plot_box(sample_df, "Fiber (g)", y_label = "Total fiber (g)")
+```
+
+### Fecal Calprotectin by study group
+
+*One row per participant (replicates collapsed).*
+
+```{r box-calprotectin}
+plot_box(participant_df, "Fecal Calprotectin", y_label = "Fecal Calprotectin (µg/g)")
+```
+
+### CRP by study group
+
+```{r box-crp}
+plot_box(participant_df, "CRP", y_label = "CRP (mg/L)")
+```
+
+------------------------------------------------------------------------
+
+# Boxplots — HBI activity category
+
+### HBI distribution by disease status
+
+```{r hbi-ridge, message=FALSE, warning=FALSE}
+sample_df |>
+  filter(Disease_status != "Non-IBD") |>
+  ggplot(aes(
+    x    = `Harvey-Bradshaw Index`,
+    y    = Disease_status,
+    fill = Disease_status
+  )) +
+  geom_density_ridges(alpha = 0.6) +
+  scale_fill_manual(values = group_pal, guide = "none") +
+  scale_x_continuous(limits = c(0, 10)) +
+  labs(x = "Harvey-Bradshaw Index", y = NULL) +
+  theme_minimal()
+```
+
+```{r hbi-box-fn}
+plot_hbi_box <- function(df, y_col, y_label = y_col) {
+  plot_data <- df |>
+    filter(Disease_status != "Non-IBD",
+           !is.na(HBI_category),
+           !is.na(.data[[y_col]]))
+
+  p <- plot_data |>
+    ggplot(aes(
+      x    = HBI_category,
+      y    = .data[[y_col]],
+      fill = HBI_category,
+      text = paste0(
+        "ID: ", participant_id, "<br>",
+        "HBI: ", `Harvey-Bradshaw Index`, " (", HBI_category, ")<br>",
+        y_label, ": ", round(.data[[y_col]], 4)
+      )
+    )) +
+    geom_boxplot(alpha = 0.5, outlier.shape = NA, width = 0.5) +
+    geom_jitter(width = 0.08, size = 2, alpha = 0.8) +
+    scale_fill_manual(values = hbi_pal, guide = "none") +
+    labs(x = "HBI activity category", y = y_label) +
+    theme_minimal()
+
+  ggplotly(p, tooltip = "text")
+}
+```
+
+### Basidio:Asco ratio by HBI category
+
+```{r hbi-box-ratio}
+plot_hbi_box(sample_df |> filter(participant_id != "SYN_39"), "ratio_basidio_asco", "Basidiomycota / Ascomycota")
+```
+
+### C. albicans by HBI category
+
+```{r hbi-box-albicans}
+plot_hbi_box(sample_df |> filter(participant_id != "SYN_39"),
+             "s__albicans", "C. albicans abundance")
+```
+
+### S. cerevisiae by HBI category
+
+```{r hbi-box-scer}
+plot_hbi_box(sample_df, "s__cerevisiae", "S. cerevisiae abundance")
+```
+
+### Shannon diversity by HBI category
+
+```{r hbi-box-shannon}
+plot_hbi_box(sample_df, "Shannon", "Shannon diversity")
+```

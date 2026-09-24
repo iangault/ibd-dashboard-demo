@@ -1,0 +1,181 @@
+---
+title: "Evidence-ranking matrix for disease-group findings"
+description: "Ranks the strongest diet, mycobiome, and symptom differences across Study_group_new to prioritize candidates for future validation."
+date: 2026-05-29
+categories: [pre-specified, synthesis, validation]
+author: "IBD Capstone team"
+---
+
+## Research question
+
+Which **disease-group** (`Study_group_new`) findings are **strongest candidates for future validation**?
+
+We synthesize tests already run across the capstone pipeline into a single **evidence-ranking matrix**, ordered by a transparent score combining p-value and effect size.
+
+## Data and inputs
+
+| Domain | Tests included | Primary inputs |
+|--------|----------------|----------------|
+| Mycobiome (beta) | PERMANOVA × taxonomic level | `data/processed/{phylum,family,genus,species}.csv` |
+| Mycobiome (alpha) | Kruskal–Wallis × diversity metric | `data/intermediate/alpha_long.rds` |
+| Diet | Kruskal–Wallis × nutrient | `data/processed/dietary_cleaned.xlsx` + mycobiome metadata |
+| Symptoms | Kruskal–Wallis × symptom score | `data/processed/cleaned_characteristics.csv` + mycobiome metadata |
+
+- **Comparison:** Active IBD vs Quiescent vs Non-IBD (`Study_group_new`).
+- **Unit:** Sample-level for mycobiome; participant-level for diet and symptoms (diet/symptoms joined to mycobiome participants).
+- **Not included here:** Continuous symptom–composition associations (Spearman/PERMANOVA on HBI), stratified nutrient–diversity Spearman, or unsupervised PCA clusters — see linked posts below.
+
+```{r}
+#| label: setup
+#| include: false
+library(dplyr)
+library(tidyr)
+library(knitr)
+library(here)
+# Anchor here to stats/ so paths work both via `quarto render` and interactive IDE sessions.
+here::i_am("posts/2026-05-29-evidence-ranking-disease-group/index.qmd")
+source(here::here("R", "evidence_ranking_helpers.R"))
+
+findings <- collect_study_group_findings()
+ranked <- rank_evidence(findings)
+
+n_tests <- nrow(ranked)
+n_sig <- sum(ranked$p < 0.05, na.rm = TRUE)
+n_high <- sum(ranked$validation_tier == "High", na.rm = TRUE)
+```
+
+**Summary:** `r n_tests` study-group comparisons ranked; `r n_sig` with p < 0.05; `r n_high` tagged **High** priority.
+
+## Methods
+
+| Item | Choice |
+|------|--------|
+| Integration | Recompute or aggregate from processed/intermediate files (same sources as individual posts) |
+| Beta diversity | PERMANOVA (`adonis2`), Bray–Curtis, 999 permutations; effect = R² |
+| Alpha, diet, symptoms | Kruskal–Wallis; effect = η²[H] (`rstatix::kruskal_effsize`) |
+| Evidence score | `−log₁₀(p) × (0.5 + 0.5 × effect_scaled)` with R² or η²[H] capped at 1 |
+| Validation tier | **High:** p < 0.05 and score ≥ 75th percentile among significant; **Medium:** p < 0.05; **Suggestive:** p < 0.10; **Low:** otherwise |
+| Multiplicity | Exploratory ranking; no global FDR across all rows |
+
+```{r}
+#| label: run-ranking
+top_validation <- ranked |>
+  filter(validation_tier %in% c("High", "Medium")) |>
+  slice_head(n = 10)
+```
+
+## Results
+
+### Full evidence-ranking matrix
+
+```{r}
+#| label: ranking-table
+#| echo: false
+ranked |>
+  select(
+    rank, validation_tier, domain, feature, test,
+    effect_label, statistic, p, n, evidence_score, source_post
+  ) |>
+  knitr::kable(
+    digits = 4,
+    col.names = c(
+      "Rank", "Tier", "Domain", "Feature", "Test",
+      "Effect", "Statistic", "p", "n", "Evidence score", "Source post"
+    )
+  )
+```
+
+### Top candidates for future validation
+
+```{r}
+#| label: top-table
+#| echo: false
+top_validation |>
+  select(rank, validation_tier, domain, feature, test, effect_label, p, evidence_score) |>
+  knitr::kable(
+    digits = 4,
+    caption = "Highest-priority findings (High or Medium tier, top 10 by evidence score)"
+  )
+```
+
+```{r}
+#| label: top-summary
+#| echo: false
+#| results: asis
+if (nrow(top_validation) == 0) {
+  cat("No findings reached **High** or **Medium** validation tier at p < 0.05.\n")
+} else {
+  cat("**Top validation candidates:**\n\n")
+  for (i in seq_len(min(5L, nrow(top_validation)))) {
+    r <- top_validation[i, ]
+    cat(sprintf(
+      "%d. [%s] **%s** — %s (%s, %s, p = %.4f, score = %.2f)\n",
+      r$rank, r$validation_tier, r$domain, r$feature,
+      r$effect_label, r$test, r$p, r$evidence_score
+    ))
+  }
+}
+```
+
+### By domain (mean evidence score)
+
+```{r}
+#| label: domain-summary-table
+#| echo: false
+ranked |>
+  group_by(domain) |>
+  summarise(
+    n_tests = n(),
+    n_sig = sum(p < 0.05, na.rm = TRUE),
+    mean_score = mean(evidence_score, na.rm = TRUE),
+    top_feature = feature[which.max(evidence_score)],
+  ) |>
+  knitr::kable(
+    digits = 3,
+    col.names = c("Domain", "Tests", "p < 0.05", "Mean evidence score", "Top feature")
+  )
+```
+
+## Figure
+
+```{r}
+#| label: fig-evidence-heatmap
+#| fig-cap: "Evidence scores for the top 20 study-group comparisons. Higher scores indicate stronger statistical support for validation."
+#| fig-width: 9
+#| fig-height: 8
+#| fig-align: center
+
+plot_evidence_heatmap(ranked, top_n = min(20L, nrow(ranked)))
+```
+
+```{r}
+#| label: save-figure
+#| include: false
+dir.create(here("figures"), showWarnings = FALSE, recursive = TRUE)
+ggsave(
+  here("figures", "evidence-ranking-matrix.png"),
+  plot_evidence_heatmap(ranked, top_n = min(20L, nrow(ranked))),
+  width = 9,
+  height = 8,
+  dpi = 300
+)
+```
+
+## Interpretation
+
+The matrix **does not replace** individual analysis posts; it prioritizes which disease-group contrasts to carry forward (e.g. pre-registration, larger cohort, or experimental follow-up).
+
+**High** tier findings combine statistical significance with relatively large R² (composition) or η²[H] (rank-based outcomes). **Low** tier rows may still be biologically interesting but need replication. Domains with few participants (especially diet and symptoms) should be interpreted cautiously.
+
+### Related analyses (not in this matrix)
+
+| Topic | Post |
+|-------|------|
+| Symptom × diversity (Spearman, HBI PERMANOVA) | `2026-05-22-symptoms-fungal-composition` |
+| Nutrient × diversity (stratified Spearman) | `2026-05-29-nutrients-diversity-disease-group` |
+| Diet + mycobiome PCA / clustering | `2026-05-29-diet-mycobiome-pca-clustering` |
+
+## Reproducibility
+
+- **Helpers:** `stats/R/evidence_ranking_helpers.R`
+- **Render:** `quarto render stats` from repository root

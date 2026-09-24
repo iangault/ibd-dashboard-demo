@@ -1,0 +1,17 @@
+---
+title: "Exploratory Analysis"
+listing:
+  contents: posts
+  sort: "date desc"
+  type: default
+  categories: true
+  sort-ui: false
+  filter-ui: false
+  fields: [date, title, categories, description]
+  include:
+    categories: "eda"
+---
+
+Descriptive visualizations of the data. No formal hypothesis test, no p-value — these document patterns and guide interpretation. Figures are produced by the processing pipeline (`make mycobiome`, `make diet`, etc.).
+
+Posts tagged **`eda`** appear here. Hypothesis tests tagged **`pre-specified`** appear under **Pre-specified Tests**.

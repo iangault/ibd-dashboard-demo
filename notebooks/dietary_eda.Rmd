@@ -1,0 +1,430 @@
+---
+title: "Dietary EDA"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+This notebook is a streamlined exploratory analysis of the dietary dataset for this capstone project. Its purpose is to summarize nutrient and food-group intake, show the main distributions in the cleaned dietary records, and provide a small set of interpretable comparisons that can help guide later analyses
+
+Also serves as a readable first pass over the dietary variables before modeling or integration with the microbiome + characteristics data. The notebook uses `data/processed/dietary_cleaned.xlsx` as the main source for diet variables, and only uses `data/processed/merged.csv` when metadata such as `Study_group_new` or `Fiber_restriction` is actually needed (bottom cells)
+
+# Libraries
+
+```{r}
+library(tidyverse)
+library(readxl)
+library(janitor)
+library(scales)
+library(patchwork)
+library(knitr)
+```
+
+# Load Processed Data
+
+```{r}
+dietary_raw <- read_excel("../data/processed/dietary_cleaned.xlsx", sheet = "Data") |>
+  clean_names()
+
+meta_raw <- read_csv("../data/processed/merged.csv", show_col_types = FALSE) |>
+  clean_names()
+
+dietary_raw |>
+  select(participant_id_esha_id, timepoint, day) |>
+  head()
+```
+
+# Prep A Participant-Level Dietary Table
+
+```{r}
+id_cols <- c("participant_id_esha_id", "timepoint", "day")
+
+diet_cols <- c(
+  "wgt_g", "cals_kcal", "prot_g", "carb_g", "fat_g", "tot_fib_g", "water_g",
+  "trp_g", "mono_fat_g", "alc_g",
+  "mp_grain_oz_eq", "mp_veg_c_eq", "mp_fruit_c_eq", "mp_dairy_c_eq", "mp_prot_oz_eq"
+)
+
+metadata_df <- meta_raw |>
+  select(participant_id, study_group_new, fiber_restriction) |>
+  distinct() |>
+  filter(!is.na(participant_id))
+
+diet_df <- dietary_raw |>
+  select(any_of(c(id_cols, diet_cols))) |>
+  filter(
+    !str_detect(coalesce(day, ""), regex("^average\\s*$", ignore_case = TRUE)),
+    !str_detect(coalesce(day, ""), regex("%\\s*recommendation", ignore_case = TRUE))
+  ) |>
+  mutate(
+    participant_id = str_extract(participant_id_esha_id, "SYN_\\d+"),
+    across(
+      any_of(diet_cols),
+      ~ readr::parse_number(as.character(.x))
+    )
+  ) |>
+  fill(participant_id, .direction = "down") |>
+  filter(!is.na(participant_id)) |>
+  group_by(participant_id) |>
+  summarise(across(any_of(diet_cols), ~ mean(.x, na.rm = TRUE)), .groups = "drop") |>
+  left_join(metadata_df, by = "participant_id") |>
+  filter(!is.na(study_group_new)) |>
+  mutate(
+    study_group_new = factor(
+      study_group_new,
+      levels = c("Non-IBD", "Quiescent", "Active IBD")
+    )
+  )
+
+glimpse(diet_df)
+```
+
+# Theme (makes the plots look nicer)
+
+```{r}
+theme_diet <- function(base_size = 12) {
+  theme_minimal(base_size = base_size) +
+    theme(
+      plot.title = element_text(face = "bold"),
+      axis.title = element_text(face = "bold"),
+      axis.text.x = element_text(angle = 30, hjust = 1),
+      panel.grid.minor = element_blank(),
+      legend.position = "bottom"
+    )
+}
+```
+
+# Quick checks
+
+```{r}
+summary_tbl <- tibble(
+  metric = c(
+    "Participants",
+    "Study groups",
+    "Fiber restriction categories",
+    "Diet variables used"
+  ),
+  value = c(
+    n_distinct(diet_df$participant_id),
+    n_distinct(diet_df$study_group_new),
+    n_distinct(diet_df$fiber_restriction),
+    length(diet_cols)
+  )
+)
+
+kable(summary_tbl)
+```
+
+```{r}
+missing_tbl <- diet_df |>
+  summarise(across(where(is.numeric), ~ mean(is.na(.x)) * 100)) |>
+  pivot_longer(everything(), names_to = "variable", values_to = "pct_missing") |>
+  arrange(desc(pct_missing))
+
+kable(missing_tbl, digits = 1)
+```
+
+# Descriptive summary
+
+```{r}
+key_nutrients <- intersect(
+  c("cals_kcal", "prot_g", "carb_g", "fat_g", "tot_fib_g", "trp_g"),
+  names(diet_df)
+)
+
+diet_df |>
+  select(study_group_new, any_of(key_nutrients)) |>
+  pivot_longer(-study_group_new, names_to = "nutrient", values_to = "value") |>
+  group_by(study_group_new, nutrient) |>
+  summarise(
+    n = sum(!is.na(value)),
+    mean = mean(value, na.rm = TRUE),
+    sd = sd(value, na.rm = TRUE),
+    median = median(value, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  mutate(across(c(mean, sd, median), round, 2)) |>
+  kable()
+```
+
+# Distribution plots
+
+```{r}
+plot_vars <- intersect(
+  c("cals_kcal", "prot_g", "carb_g", "fat_g", "tot_fib_g", "trp_g"),
+  names(diet_df)
+)
+
+dist_plot <- diet_df |>
+  select(any_of(plot_vars)) |>
+  pivot_longer(everything(), names_to = "nutrient", values_to = "value") |>
+  ggplot(aes(x = value)) +
+  geom_histogram(bins = 18, fill = "#4E79A7", color = "white", alpha = 0.9) +
+  facet_wrap(~ nutrient, scales = "free") +
+  labs(
+    title = "Distributions of Key Dietary Variables",
+    x = NULL,
+    y = "Count"
+  ) +
+  theme_diet()
+
+dist_plot
+```
+
+# Group comparisons
+
+```{r}
+box_vars <- intersect(
+  c("tot_fib_g", "trp_g", "cals_kcal", "prot_g"),
+  names(diet_df)
+)
+
+group_plot <- diet_df |>
+  select(study_group_new, any_of(box_vars)) |>
+  pivot_longer(-study_group_new, names_to = "nutrient", values_to = "value") |>
+  ggplot(aes(x = study_group_new, y = value, fill = study_group_new)) +
+  geom_boxplot(alpha = 0.8, outlier.alpha = 0.7) +
+  geom_jitter(width = 0.15, alpha = 0.45, size = 1.8, show.legend = FALSE) +
+  facet_wrap(~ nutrient, scales = "free_y") +
+  scale_fill_brewer(palette = "Set2") +
+  labs(
+    title = "Dietary Variables by Study Group",
+    x = NULL,
+    y = NULL,
+    fill = "Study group"
+  ) +
+  theme_diet()
+
+group_plot
+```
+
+```{r}
+test_vars <- intersect(c("tot_fib_g", "trp_g"), names(diet_df))
+
+kruskal_results <- map_dfr(test_vars, function(var) {
+  test <- kruskal.test(reformulate("study_group_new", response = var), data = diet_df)
+
+  tibble(
+    nutrient = var,
+    statistic = unname(test$statistic),
+    p_value = test$p.value
+  )
+}) |>
+  mutate(
+    statistic = round(statistic, 3),
+    p_value = signif(p_value, 3)
+  )
+
+kable(kruskal_results)
+```
+
+```{r}
+pairwise_results <- map_dfr(test_vars, function(var) {
+  pw <- pairwise.wilcox.test(
+    x = diet_df[[var]],
+    g = diet_df$study_group_new,
+    p.adjust.method = "BH"
+  )
+
+  expand.grid(
+    group_1 = rownames(pw$p.value),
+    group_2 = colnames(pw$p.value),
+    stringsAsFactors = FALSE
+  ) |>
+    as_tibble() |>
+    mutate(
+      p_value = map2_dbl(group_1, group_2, ~ pw$p.value[.x, .y])
+    ) |>
+    filter(!is.na(p_value)) |>
+    mutate(nutrient = var, p_value = signif(p_value, 3))
+})
+
+kable(pairwise_results)
+```
+
+# Healthy Diet scores
+
+## Food group score
+
+```{r}
+score_cols <- intersect(c(
+  "mp_grain_oz_eq", "mp_veg_c_eq", "mp_fruit_c_eq", "mp_dairy_c_eq", "mp_prot_oz_eq"
+), names(diet_df))
+
+diet_df <- diet_df |>
+  mutate(
+    healthy_diet_score = rowSums(across(any_of(score_cols)), na.rm = TRUE)
+  )
+
+diet_df |>
+  summarise(
+    mean_score = mean(healthy_diet_score, na.rm = TRUE),
+    sd_score = sd(healthy_diet_score, na.rm = TRUE),
+    median_score = median(healthy_diet_score, na.rm = TRUE)
+  ) |>
+  mutate(across(everything(), round, 2)) |>
+  kable()
+```
+
+## Mediterranean-Style Score (missing many food components)
+
+```{r}
+score_medians <- diet_df |>
+  summarise(across(any_of(score_cols), median, na.rm = TRUE))
+
+diet_df <- diet_df |>
+  mutate(
+    mono_fat_ratio = mono_fat_g / if_else(fat_g == 0, NA_real_, fat_g),
+    mds = 0L
+  )
+
+if ("mp_veg_c_eq" %in% names(diet_df)) {
+  diet_df <- diet_df |>
+    mutate(mds = mds + if_else(mp_veg_c_eq >= score_medians$mp_veg_c_eq, 1L, 0L, missing = 0L))
+}
+
+if ("mp_fruit_c_eq" %in% names(diet_df)) {
+  diet_df <- diet_df |>
+    mutate(mds = mds + if_else(mp_fruit_c_eq >= score_medians$mp_fruit_c_eq, 1L, 0L, missing = 0L))
+}
+
+if ("mp_grain_oz_eq" %in% names(diet_df)) {
+  diet_df <- diet_df |>
+    mutate(mds = mds + if_else(mp_grain_oz_eq >= score_medians$mp_grain_oz_eq, 1L, 0L, missing = 0L))
+}
+
+if ("mp_dairy_c_eq" %in% names(diet_df)) {
+  diet_df <- diet_df |>
+    mutate(mds = mds + if_else(mp_dairy_c_eq < score_medians$mp_dairy_c_eq, 1L, 0L, missing = 0L))
+}
+
+diet_df <- diet_df |>
+  mutate(
+    mds = mds + if_else(mono_fat_ratio > 0.35, 1L, 0L, missing = 0L),
+    mds = mds + if_else(alc_g > 0 & alc_g <= 14, 1L, 0L, missing = 0L)
+  )
+
+diet_df |>
+  ggplot(aes(x = study_group_new, y = mds, fill = study_group_new)) +
+  geom_boxplot(alpha = 0.85) +
+  geom_jitter(width = 0.15, alpha = 0.45, size = 1.8, show.legend = FALSE) +
+  scale_fill_brewer(palette = "Set2") +
+  labs(
+    title = "Mediterranean-Style Diet Score by Study Group",
+    x = NULL,
+    y = "MDS"
+  ) +
+  theme_diet()
+```
+
+# Intake vs. Reference Targets
+
+```{r}
+baseline_targets <- c(
+  mp_grain_oz_eq = 6.0,
+  mp_veg_c_eq = 2.5,
+  mp_fruit_c_eq = 2.0,
+  mp_dairy_c_eq = 3.0,
+  mp_prot_oz_eq = 5.5
+)
+
+baseline_targets <- baseline_targets[names(baseline_targets) %in% names(diet_df)]
+
+comparison_df <- tibble(
+  variable = names(baseline_targets),
+  target = unname(baseline_targets),
+  average_intake = map_dbl(names(baseline_targets), ~ mean(diet_df[[.x]], na.rm = TRUE))
+) |>
+  mutate(
+    average_intake = round(average_intake, 2),
+    gap = round(average_intake - target, 2)
+  )
+
+kable(comparison_df)
+```
+
+```{r}
+comparison_df |>
+  pivot_longer(c(average_intake, target), names_to = "type", values_to = "value") |>
+  ggplot(aes(x = variable, y = value, fill = type)) +
+  geom_col(position = "dodge") +
+  scale_fill_manual(values = c("average_intake" = "#4E79A7", "target" = "#F28E2B")) +
+  labs(
+    title = "Average Intake vs. Reference Targets",
+    x = NULL,
+    y = "Amount",
+    fill = NULL
+  ) +
+  theme_diet()
+```
+
+```{r}
+deficiency_df <- diet_df |>
+  transmute(
+    participant_id,
+    across(
+      all_of(names(baseline_targets)),
+      ~ .x - baseline_targets[cur_column()],
+      .names = "{.col}_deviation"
+    )
+  ) |>
+  mutate(
+    total_deficiency_score = rowSums(
+      across(
+        ends_with("_deviation"),
+        ~ if_else(.x < 0, .x, 0)
+      ),
+      na.rm = TRUE
+    )
+  ) |>
+  arrange(total_deficiency_score)
+
+kable(head(deficiency_df, 10), digits = 2)
+```
+
+# Correlation plot
+
+```{r}
+corr_vars <- intersect(c(
+  "cals_kcal", "prot_g", "carb_g", "fat_g", "tot_fib_g", "trp_g",
+  "mp_grain_oz_eq", "mp_veg_c_eq", "mp_fruit_c_eq", "mp_dairy_c_eq", "mp_prot_oz_eq"
+), names(diet_df))
+
+cor_mat <- cor(diet_df[, corr_vars], use = "pairwise.complete.obs")
+
+corr_long <- expand.grid(
+  var_1 = rownames(cor_mat),
+  var_2 = colnames(cor_mat),
+  stringsAsFactors = FALSE
+) |>
+  as_tibble() |>
+  mutate(
+    corr = map2_dbl(var_1, var_2, ~ cor_mat[.x, .y])
+  )
+
+corr_long |>
+  ggplot(aes(var_1, var_2, fill = corr)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient2(
+    low = "#B07AA1",
+    mid = "white",
+    high = "#4E79A7",
+    limits = c(-1, 1)
+  ) +
+  labs(
+    title = "Correlation Matrix of Selected Dietary Variables",
+    x = NULL,
+    y = NULL,
+    fill = "r"
+  ) +
+  theme_diet() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+# Notes 
+
+- This notebook intentionally starts from `data/processed/dietary_cleaned.xlsx` instead of the raw dietary file
+- The merged dataset is only used to attach metadata needed for grouped comparisons
+- The participant-level table averages day-level dietary records within each participant
+- Duplicated exploratory plots, quartile binning, and unfinished clustering steps from the Python notebook were removed to keep the analysis focused and readable

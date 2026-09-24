@@ -1,0 +1,118 @@
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+
+# rsconnect deployment records are local/personal (tied to the account that
+# deployed), not shared project config — same reasoning as .Rproj.user/
+dashboard/rsconnect/
+
+# Python cache and build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Python packaging and tooling
+pip-wheel-metadata/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.tox/
+.nox/
+
+# Python virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Python project files
+Pipfile.lock
+poetry.lock
+
+# Jupyter
+.ipynb_checkpoints/
+
+# R package environment
+renv/library/
+renv/python/
+renv/staging/
+stats/renv/
+
+# Generated notebooks and outputs
+# *.nb.html
+# *.html
+# *.pdf
+# *.png
+# *.jpg
+# *.jpeg
+# *.tiff
+
+# Data directories: commit layout (.gitkeep) only, not data files.
+# Exception: data/raw/*.xlsx here are fully synthetic (see
+# src/synth_data/generate_fake_raw_data.py) and are committed so a fresh
+# clone/CI run has a seed to bootstrap the pipeline from.
+data/raw/**
+!data/raw/.gitkeep
+!data/raw/*.xlsx
+data/intermediate/**
+!data/intermediate/.gitkeep
+data/processed/**
+!data/processed/.gitkeep
+
+# Dashboard data: copied from data/processed and data/intermediate via
+# `make dashboard-data` (a prerequisite of `make app`), not committed
+dashboard/data/**
+!dashboard/data/.gitkeep
+
+# EDA figs are produced from core pipeline and saved in figures/
+# The quarto blog EDA pulls from this single source of truth,
+# and does not recreate through in line quarto code
+# For the 2 years that the repo will be private this is ok.
+# Github actions, when public, would not have access to the figures for rendering the blog
+# But for now, this is acceptable and will keep the git history lighter and cleaner
+# figures/* 
+!figures/mycobiome/.gitkeep
+!figures/characteristics/.gitkeep
+!figures/diet/.gitkeep
+
+notebooks/*.html
+
+# OS files
+.DS_Store
+
+# Editor files
+.vscode/
+
+# Quarto site output
+stats/_site/
+stats/.quarto/
+.positai
+pipeline_diagram.html

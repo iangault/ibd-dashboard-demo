@@ -1,0 +1,17 @@
+{
+  "hash": "2f15e6fb586b6e66d69b5cae72cb2e39",
+  "result": {
+    "engine": "knitr",
+    "markdown": "---\ntitle: \"PERMANOVA genus beta diversity by study group\"\ndescription: \"Bray–Curtis dissimilarity on genus relative abundance; study-group effect tested with permutational MANOVA.\"\ndate: 2026-05-19\ncategories: [permanova, beta-diversity, genus, pre-specified]\nauthor: \"IBD Capstone team\"\n---\n\n## Research question\n\nDoes **study group** explain differences in **genus-level** community composition?\n\n**Null:** Multivariate centroids do not differ among study groups (PERMANOVA on Bray–Curtis distances).\n\n## Data\n\n- **Response:** Genus relative abundance (`g__*` columns after wide reshape).\n- **Predictor:** `Study_group_new`.\n- **Input:** `data/processed/genus.csv` (long format from `make save`; pivoted in this post).\n\n## Methods\n\n| Item | Choice |\n|------|--------|\n| Test | PERMANOVA (`vegan::adonis2`) |\n| Distance | Bray–Curtis |\n| Formula | `dist ~ Study_group_new` |\n| Permutations | 999 |\n| Visualization | PCoA (`cmdscale`, k = 2), 95% ellipses |\n\n\n\n## Results\n\n\n::: {.cell}\n::: {.cell-output-display}\n\n\n|Term     | Df| Sum of squares|     R²|      F| Pr(>F)|\n|:--------|--:|--------------:|------:|------:|------:|\n|Model    |  2|         0.1846| 0.1083| 0.7896|  0.852|\n|Residual | 13|         1.5195| 0.8917|     NA|     NA|\n|Total    | 15|         1.7041| 1.0000|     NA|     NA|\n\n\n:::\n:::\n\n\n**Study group** explained **10.8%** of variance in Genus composition (R² = 0.108; pseudo-F = 0.79; p = 0.8520, 999 permutations).\n\n## Figure\n\n\n::: {.cell layout-align=\"center\"}\n\n```{.r .cell-code}\nplot_pcoa_study_group(\n  fit$dist,\n  fit$metadata,\n  permanova_result,\n  cfg$label\n)\n```\n\n::: {.cell-output-display}\n![PCoA of genus Bray–Curtis dissimilarity by study group.](index_files/figure-html/fig-pcoa-1.png){#fig-pcoa fig-align='center' width=672}\n:::\n:::\n\n\n\n\n## Reproducibility\n\n- **Helpers:** `stats/R/permanova_helpers.R`\n- **Pipeline:** `make wrangle` → `make save`\n",
+    "supporting": [
+      "index_files"
+    ],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

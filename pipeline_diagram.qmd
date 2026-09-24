@@ -1,0 +1,363 @@
+---
+title: "Pipeline Diagram"
+date: 2026-June-10
+format:
+  html:
+    embed-resources: true
+---
+
+Rendered diagrams of the current data analysis pipeline. 
+
+```{r}
+#| include: false
+library(DiagrammeR)
+library(DiagrammeRsvg)
+library(rsvg)
+
+out_dir <- file.path("figures", "diagrams")
+dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
+
+export_svg_png <- function(graph, name) {
+  svg <- DiagrammeRsvg::export_svg(graph)
+  svg_path <- file.path(out_dir, paste0(name, ".svg"))
+  png_path <- file.path(out_dir, paste0(name, ".png"))
+  writeLines(svg, svg_path)
+  rsvg::rsvg_png(charToRaw(svg), png_path, width = 2400)
+}
+```
+
+## Overview
+
+High-level view of the `make` pipeline stages.
+
+```{r}
+overview <- grViz("
+digraph pipeline_overview {
+  graph [rankdir = LR, fontname = Helvetica, splines = ortho,
+         nodesep = 0.4, ranksep = 0.6, bgcolor = white]
+  node  [shape = box, style = 'rounded,filled', fontname = Helvetica,
+         fontsize = 14, margin = '0.2,0.12', penwidth = 1.2]
+  edge  [fontname = Helvetica, fontsize = 10, color = '#999999',
+         arrowsize = 0.7, penwidth = 1.2, arrowhead = vee]
+
+  raw [label = 'data/raw', shape = folder,
+       fillcolor = '#FFF3CD:#FFD666', gradientangle = 90, color = '#E0A800']
+
+  myco  [label = 'make mycobiome',      fillcolor = '#D4EDDA:#A8E0BB', gradientangle = 90, color = '#5CB87A']
+  diet  [label = 'make dietary',        fillcolor = '#D4EDDA:#A8E0BB', gradientangle = 90, color = '#5CB87A']
+  chars [label = 'make characteristics', fillcolor = '#D4EDDA:#A8E0BB', gradientangle = 90, color = '#5CB87A']
+
+  merge [label = 'make merge\\n(combine + ID audit)', fillcolor = '#D6E4FF:#AFC9F7', gradientangle = 90, color = '#5B8DEF']
+
+  app   [label = 'make app\\nShiny dashboard', fillcolor = '#FBE0E1:#F5BFC2', gradientangle = 90, color = '#E0747A']
+  stats [label = 'make stats\\nQuarto site',   fillcolor = '#FBE0E1:#F5BFC2', gradientangle = 90, color = '#E0747A']
+
+  raw -> myco
+  raw -> diet
+  raw -> chars
+
+  myco  -> merge
+  diet  -> merge
+  chars -> merge
+
+  myco  -> stats
+  diet  -> stats
+  chars -> stats
+  merge -> stats
+  merge -> app
+
+  subgraph cluster_legend {
+    label = 'Legend'
+    style = 'rounded'
+    color = '#CCCCCC'
+    fontsize = 11
+    fontcolor = '#666666'
+    margin = 12
+
+    l_raw   [label = 'Raw data',        shape = folder, fillcolor = '#FFF3CD:#FFD666', gradientangle = 90, color = '#E0A800']
+    l_proc  [label = 'Step 1: Processing', fillcolor = '#D4EDDA:#A8E0BB', gradientangle = 90, color = '#5CB87A']
+    l_merge [label = 'Step 2: Merge',      fillcolor = '#D6E4FF:#AFC9F7', gradientangle = 90, color = '#5B8DEF']
+    l_out   [label = 'Step 3: Outputs',    fillcolor = '#FBE0E1:#F5BFC2', gradientangle = 90, color = '#E0747A']
+
+    l_raw -> l_proc -> l_merge -> l_out [style = invis]
+  }
+}
+")
+
+export_svg_png(overview, "pipeline_overview")
+overview
+```
+
+## Detailed
+
+Script-level view within each pipeline stage.
+
+```{r}
+detailed <- grViz("
+digraph pipeline_detailed {
+  graph [rankdir = LR, fontname = Helvetica, splines = ortho, compound = true,
+         nodesep = 0.3, ranksep = 0.7, bgcolor = white,
+         label = 'Pipeline Detailed', labelloc = t, fontsize = 22,
+         fontcolor = '#333333']
+  node  [shape = box, style = 'rounded,filled', fontname = Helvetica,
+         fontsize = 11, margin = '0.15,0.1', penwidth = 1]
+  edge  [fontname = Helvetica, fontsize = 9, color = '#999999',
+         arrowsize = 0.6, penwidth = 1, arrowhead = vee]
+
+  raw [label = 'data/raw\\n(meta, taxa, biomarkers,\\ndietary intake, characteristics)',
+       shape = folder, fillcolor = '#FFF3CD:#FFD666', gradientangle = 90, color = '#E0A800', fontsize = 11]
+
+  subgraph cluster_myco {
+    label = 'make mycobiome'
+    style = 'rounded,filled'
+    color = '#5CB87A'
+    fillcolor = '#EAF7EE'
+    fontsize = 12
+    fontcolor = '#3C8C57'
+    margin = 14
+
+    m1 [label = '01_data_import.R',     fillcolor = white, color = '#5CB87A']
+    m2 [label = '02_data_wrangling.R',  fillcolor = white, color = '#5CB87A']
+    m5 [label = '05_heatmap_analysis.R', fillcolor = white, color = '#5CB87A']
+    m6 [label = '06_save_processed.R',  fillcolor = white, color = '#5CB87A']
+
+    m1 -> m2 -> m5
+    m2 -> m6
+  }
+
+  subgraph cluster_diet {
+    label = 'make dietary'
+    style = 'rounded,filled'
+    color = '#5CB87A'
+    fillcolor = '#EAF7EE'
+    fontsize = 12
+    fontcolor = '#3C8C57'
+    margin = 14
+
+    d0 [label = 'dietary.R',                 fillcolor = white, color = '#5CB87A']
+    d1 [label = '01_prepare_eda_data.R',     fillcolor = white, color = '#5CB87A']
+    d2 [label = '02_correlation_heatmap.R',  fillcolor = white, color = '#5CB87A']
+    d3 [label = '03_scaled_boxplots.R',      fillcolor = white, color = '#5CB87A']
+    d4 [label = '04_group_kde_plots.R',      fillcolor = white, color = '#5CB87A']
+    d5 [label = '05_deficiency_barplot.R',   fillcolor = white, color = '#5CB87A']
+
+    d0 -> d1
+    d1 -> d2
+    d1 -> d3
+    d1 -> d4
+    d1 -> d5
+  }
+
+  subgraph cluster_char {
+    label = 'make characteristics'
+    style = 'rounded,filled'
+    color = '#5CB87A'
+    fillcolor = '#EAF7EE'
+    fontsize = 12
+    fontcolor = '#3C8C57'
+    margin = 14
+
+    c1 [label = 'characteristics.R', fillcolor = white, color = '#5CB87A']
+  }
+
+  subgraph cluster_merge {
+    label = 'make merge'
+    style = 'rounded,filled'
+    color = '#5B8DEF'
+    fillcolor = '#EAF1FE'
+    fontsize = 12
+    fontcolor = '#2E5FB8'
+    margin = 14
+
+    n2 [label = '1. merge_files.R\\n(combine domains)', fillcolor = white, color = '#5B8DEF']
+    n1 [label = '2. normalize_participant_ids.R\\n(standalone ID audit)', fillcolor = white, color = '#5B8DEF']
+  }
+
+  audit [label = 'participant_id_normalization\\n_audit.csv', shape = note,
+         fillcolor = '#F2F2F2', color = '#BBBBBB', fontsize = 10]
+
+  app   [label = 'make app\\nShiny dashboard', fillcolor = '#FBE0E1:#F5BFC2', gradientangle = 90, color = '#E0747A']
+  stats [label = 'make stats\\nQuarto site',   fillcolor = '#FBE0E1:#F5BFC2', gradientangle = 90, color = '#E0747A']
+
+  raw -> m1
+  raw -> d0
+  raw -> c1
+
+  m2 -> n2
+  d0 -> n2
+  c1 -> n2
+
+  n1 -> audit
+
+  n2 -> app
+  n2 -> stats
+  m2 -> stats
+  m5 -> stats
+  d2 -> stats
+  d3 -> stats
+  d4 -> stats
+  d5 -> stats
+  c1 -> stats
+}
+")
+
+export_svg_png(detailed, "pipeline_detailed")
+detailed
+```
+
+## Data linkage
+
+How raw files are cleaned, which keys link domains, and how `make merge` builds the combined tables. All participant IDs are normalized to `SYN_NN` (e.g. `SYN_07`) via `normalize_participant_id()` in `src/participant_id.R` before joins.
+
+```{r}
+linkage <- grViz("
+digraph data_linkage {
+  graph [rankdir = TB, fontname = Helvetica, splines = true, compound = true,
+         nodesep = 0.5, ranksep = 1.4, bgcolor = white, pad = 0.4]
+  node  [shape = box, style = 'rounded,filled', fontname = Helvetica,
+         fontsize = 16, margin = '0.2,0.12', penwidth = 1, width = 2.2]
+  edge  [fontname = Helvetica, fontsize = 12, color = '#777777',
+         arrowsize = 0.6, penwidth = 0.9, arrowhead = vee]
+
+  subgraph cluster_raw {
+    label = 'data/raw'
+    style = 'rounded,filled'
+    color = '#E0A800'
+    fillcolor = '#FFF8E6'
+    fontsize = 14
+    fontcolor = '#8A6D00'
+    margin = 16
+
+    { rank = same;
+      r_meta   [label = 'MBI sample IDs meta\\nkey: Sample_ID | Participant ID', fillcolor = '#FFF3CD', color = '#E0A800']
+      r_taxa   [label = 'Stool mycobiota abund.\\nkey: Sample_ID', fillcolor = '#FFF3CD', color = '#E0A800']
+      r_inflam [label = 'Inflammatory biomarkers\\nkey: participant_id', fillcolor = '#FFF3CD', color = '#E0A800']
+    }
+    { rank = same;
+      r_diet   [label = 'Dietary data\\nkey: Participant ID (ESHA ID)', fillcolor = '#FFF3CD', color = '#E0A800']
+      r_char   [label = 'Participant characteristics\\nkey: participant_id', fillcolor = '#FFF3CD', color = '#E0A800']
+    }
+  }
+
+  subgraph cluster_myco {
+    label = 'make mycobiome'
+    style = 'rounded,filled'
+    color = '#5CB87A'
+    fillcolor = '#EAF7EE'
+    fontsize = 13
+    fontcolor = '#3C8C57'
+    margin = 16
+
+    { rank = same;
+      i_meta   [label = 'meta_data.rds\\nSample_ID, Participant_ID', fillcolor = white, color = '#5CB87A']
+      i_inflam [label = 'inflammatory_markers.rds\\nParticipant_ID', fillcolor = white, color = '#5CB87A']
+    }
+    { rank = same;
+      i_taxa  [label = 'taxa_long_list.rds\\n+ genus/family/phylum/species.csv', fillcolor = white, color = '#5CB87A', width = 2.2]
+      i_alpha [label = 'alpha_long.rds', fillcolor = white, color = '#5CB87A', width = 1.5]
+    }
+  }
+
+  subgraph cluster_other {
+    label = 'make dietary / make characteristics'
+    style = 'rounded,filled'
+    color = '#5CB87A'
+    fillcolor = '#EAF7EE'
+    fontsize = 13
+    fontcolor = '#3C8C57'
+    margin = 16
+
+    { rank = same;
+      p_diet [label = 'dietary_cleaned.xlsx\\nparticipant-day rows', fillcolor = white, color = '#5CB87A']
+      p_char [label = 'cleaned_characteristics.csv\\none row per participant', fillcolor = white, color = '#5CB87A', width = 2.1]
+    }
+  }
+
+  subgraph cluster_merge {
+    label = 'make merge (merge_files.R)'
+    style = 'rounded,filled'
+    color = '#5B8DEF'
+    fillcolor = '#EAF1FE'
+    fontsize = 13
+    fontcolor = '#2E5FB8'
+    margin = 16
+
+    { rank = same;
+      m_merged [label = 'merged.csv\\nsample-level (mycobiome anchor)', fillcolor = white, color = '#5B8DEF', width = 2.0]
+      m_all    [label = 'participants_all.csv\\nparticipant-level (chars anchor)', fillcolor = white, color = '#5B8DEF', width = 2.1]
+    }
+  }
+
+  subgraph cluster_out {
+    label = 'Downstream'
+    style = 'rounded,filled'
+    color = '#E0747A'
+    fillcolor = '#FFF5F5'
+    fontsize = 13
+    fontcolor = '#B04A50'
+    margin = 14
+
+    { rank = same;
+      app   [label = 'Shiny dashboard\\nmerged + participants_all\\n+ inflammatory_markers', fillcolor = '#FBE0E1', color = '#E0747A', width = 2.0]
+      stats [label = 'Quarto stats site\\nreads intermediate/processed tables', fillcolor = '#FBE0E1', color = '#E0747A', width = 2.0]
+    }
+  }
+
+  m_audit [label = 'participant_id_normalization_audit.csv', shape = note, fillcolor = '#F2F2F2', color = '#BBBBBB', fontsize = 16]
+  gap1 [label = '', shape = point, width = 0, height = 0, style = invis]
+  gap2 [label = '', shape = point, width = 0, height = 0, style = invis]
+
+  { rank = same; m_audit; gap1; gap2; m_merged; m_all }
+  m_audit -> gap1 [style = invis]
+  gap1 -> gap2 [style = invis]
+  gap2 -> m_merged [style = invis]
+
+  r_meta   -> i_meta   [xlabel = 'SYN_NN']
+  r_taxa   -> i_taxa   [xlabel = 'Sample_ID']
+  r_taxa   -> i_alpha  [xlabel = 'alpha sheet']
+  r_inflam -> i_inflam [xlabel = 'Participant_ID']
+  r_diet   -> p_diet   [xlabel = 'SYN_NN']
+  r_char   -> p_char   [xlabel = 'SYN_NN']
+
+  i_meta -> i_taxa [style = dashed, xlabel = 'metadata', constraint = false]
+
+  i_taxa  -> m_merged [color = '#2E5FB8', penwidth = 1.2]
+  i_alpha -> m_merged
+  p_char  -> m_merged
+  p_diet  -> m_merged
+
+  p_char -> m_all
+  p_diet -> m_all
+
+  m_merged -> app
+  m_all    -> app
+
+  m_merged -> stats
+  m_all    -> stats
+
+  m_merged -> m_audit [style = dotted, xlabel = 'ID audit', constraint = false]
+}
+")
+
+svg <- DiagrammeRsvg::export_svg(linkage)
+svg_path <- file.path(out_dir, "data_linkage.svg")
+png_path <- file.path(out_dir, "data_linkage.png")
+writeLines(svg, svg_path)
+rsvg::rsvg_png(charToRaw(svg), png_path, width = 3200)
+linkage
+```
+
+### Linkage key reference
+
+| Domain | Raw file | Primary / linkage key | Clean output | Join role in `merged.csv` |
+|--------|----------|----------------------|--------------|---------------------------|
+| Mycobiome metadata | `SYN_MBI sample IDs meta.xlsx` | `Sample_ID` (sample PK); `Participant ID` → `Participant_ID` | `meta_data.rds` | Supplies sample metadata on every mycobiome row |
+| Mycobiome taxa | `SYN_stool mycobiota relative abund.xlsx` | `Sample_ID` | `taxa_long_list.rds`, `genus.csv`, etc. | **Anchor** — one row per stool sample |
+| Alpha diversity | (alpha sheet in taxa workbook) | `Sample_ID` | `alpha_long.rds` | Left-joined on `Sample_ID` |
+| Inflammatory biomarkers | `SYN_Inflammatory biomarkers.xlsx` | `participant_id` → `Participant_ID` | `inflammatory_markers.rds` | **Not** in `merged.csv`; joined in dashboard on `Participant_ID` |
+| Dietary intake | `SYN_dietary data.xlsx` | `Participant ID (ESHA ID)` → `participant_id` | `dietary_cleaned.xlsx` | Aggregated to one row per participant, joined on `Participant_ID = participant_id` |
+| Characteristics | `SYN_Participant Characteristics.xlsx` | `participant_id` | `cleaned_characteristics.csv` | Left-joined on `Participant_ID = participant_id` |
+
+`participants_all.csv` uses **characteristics as the anchor** (all surveyed participants), then left-joins mean dietary intake and study-group metadata from mycobiome. The `has_mycobiome` and `has_diet` flags record sequencing and dietary coverage.
+
+SVG and high-resolution PNG copies of both diagrams are saved to `figures/diagrams/` for use in slides, the README, or Canva.

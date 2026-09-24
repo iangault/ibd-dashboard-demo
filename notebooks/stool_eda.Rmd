@@ -1,0 +1,845 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+---
+
+# Introduction
+
+This notebook is an artifact of the initial exploration of the data. Parts of the core pipeline were derived from this notebook; however, it is not based on up-to-date data and does not reflect the current analysis. Please interpret with caution. It is included in the repo for informational purposes, but could be rerun manually to reflect current data.
+
+Its core steps are:
+
+1.  **Data import & wrangling** — loads raw mycobiome relative abundance sheets (phylum, family, genus, species) and sample metadata; joins them and pivots to long format.
+
+2.  **Unidentified fungi assessment** — calculates the proportion of unclassified reads per sample at each taxonomic level; removes samples where \>99% of abundance is unidentified.
+
+3.  **Alpha diversity** — plots Shannon, Chao1, and Simpson diversity by study group (Active IBD / Quiescent / Non-IBD) and fiber restriction level; runs a Kruskal–Wallis test across groups (no significant results reported).
+
+4.  **Relative abundance bar charts** — visualizes the top 10 taxa at each taxonomic level, grouped by study group.
+
+5.  **Heatmaps** — builds log10 + Z-score normalized taxa × sample matrices and renders clustered heatmaps (family, genus, species) annotated by study group.
+
+6.  **Saves** — code for exporting Z-score matrices and CSVs is present but commented out. They are not part of the core pipeline of scripts and not to be derived from notebook.
+
+Parts of the data pipeline (e.g. the Z-score matrix construction) were carried forward into downstream notebooks like `pca_tsne.Rmd`.
+
+# Installations
+
+```{r, warning=TRUE}
+# clear environment
+rm(list = ls())
+
+# install BiocManager if needed
+if (!requireNamespace("BiocManager", quietly = TRUE)) {
+  install.packages("BiocManager")
+}
+
+# install ComplexHeatmap only if missing
+if (!requireNamespace("ComplexHeatmap", quietly = TRUE)) {
+  BiocManager::install("ComplexHeatmap")
+}
+```
+
+# Libraries
+
+```{r, warning=TRUE}
+# now load libraries
+library(readxl)
+library(janitor)
+library(purrr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(cowplot)
+library(tibble)
+library(ComplexHeatmap)
+library(grid)
+library(rlang)
+library(rstatix)
+library(here)
+
+```
+
+# Data Import
+
+```{r}
+file_path <- here("data/raw/SYN_stool mycobiota relative abund.xlsx")
+
+sheets <- excel_sheets(file_path)
+
+data_list <- setNames(
+  lapply(sheets, function(s) {
+    read_excel(file_path, sheet = s)
+  }),
+  make_clean_names(sheets)
+)
+
+meta_raw <- read_excel(here("data/raw/SYN_MBI sample IDs meta.xlsx"))
+```
+
+# Figure Theme
+
+```{r}
+theme_micro <- function(base_size = 12) {
+  theme_minimal(base_size = base_size) +
+    theme(
+      axis.text.x = element_text(angle = 30, hjust = 1),
+      strip.text = element_text(face = "bold", size = base_size * 1.1),
+      plot.title = element_text(face = "bold", size = base_size * 1.2),
+      axis.title = element_text(face = "bold"),
+      axis.title.x = element_text(face = "bold"),
+      panel.spacing = unit(0.6, "lines"),
+      panel.grid.minor = element_blank()
+    )
+}
+```
+
+# Summary Stats
+
+```{r}
+# list to store results
+summary_info <- list()
+
+for (name in names(data_list)) {
+  obj <- data_list[[name]]
+
+  summary_info[[name]] <- list(
+    n_rows = nrow(obj),
+    n_cols = ncol(obj),
+    col_names = names(obj)
+  )
+}
+
+summary_info
+```
+
+# Data Wrangling
+
+## Meta Data
+
+```{r}
+meta_data <- meta_raw |>
+  rename(Participant_ID = `Participant ID`) |>
+  select(Sample_ID, Participant_ID, Sample_type, Study_group_new, Fiber_restriction) |>
+  distinct()
+
+meta_data
+```
+
+## Join
+
+```{r}
+meta_cols <- names(meta_data)
+
+print("Any Duplications of Sample ID?")
+
+for (name in names(data_list)) {
+  df <- data_list[[name]]
+
+  # remove if exists (note backticks for space)
+  if ("Participant ID" %in% names(df)) {
+    df <- df |> select(-`Participant ID`)
+  }
+
+  data_list[[name]] <- df |>
+    left_join(meta_data, by = "Sample_ID") |>
+    select(all_of(meta_cols), everything())
+
+  print(any(duplicated(data_list[[name]]$Sample_ID)))
+}
+```
+
+## List to objects
+
+```{r}
+list2env(data_list, envir = .GlobalEnv)
+```
+
+```{r}
+clean_tax <- function(x) sub("^[a-z]__", "", x)
+
+make_taxa_long <- function(df, tax_col, meta_cols, value_col = "Value") {
+  df |>
+    tidyr::pivot_longer(
+      -dplyr::all_of(meta_cols),
+      names_to = tax_col,
+      values_to = value_col
+    ) |>
+    dplyr::mutate(
+      !!tax_col := clean_tax(.data[[tax_col]])
+    )
+}
+
+family_long <- make_taxa_long(Family, "Family", meta_cols)
+genus_long <- make_taxa_long(Genus, "Genus", meta_cols)
+species_long <- make_taxa_long(Species, "Species", meta_cols)
+phylum_long <- make_taxa_long(Phylum, "Phylum", meta_cols)
+```
+
+## Testing NA
+
+```{r}
+taxa_long_list <- list(
+  family  = family_long,
+  genus   = genus_long,
+  species = species_long,
+  phylum  = phylum_long
+)
+
+na_summary <- lapply(names(taxa_long_list), function(col) {
+  df <- taxa_long_list[[col]]
+
+  data.frame(
+    level = col,
+    n_na = sum(is.na(df$Value)),
+    prop_na = mean(is.na(df$Value))
+  )
+}) |> dplyr::bind_rows()
+
+na_summary
+```
+
+## Unidentified Fungi
+
+### Functions
+
+```{r}
+calc_na_prop_abund <- function(df, level_name) {
+  df |>
+    mutate(is_na = is.na(.data[[level_name]]) | .data[[level_name]] == "NA") |>
+    group_by(Sample_ID) |>
+    summarise(
+      prop_na = sum(Value[is_na], na.rm = TRUE) / sum(Value, na.rm = TRUE),
+      .groups = "drop"
+    ) |>
+    mutate(Taxonomic_Level = level_name)
+}
+
+find_high_na <- function(df, level_name, threshold = 0.9) {
+  df |>
+    mutate(is_na = is.na(.data[[level_name]]) | .data[[level_name]] == "NA") |>
+    group_by(Sample_ID) |>
+    summarise(
+      prop_na = sum(Value[is_na], na.rm = TRUE) / sum(Value, na.rm = TRUE),
+      .groups = "drop"
+    ) |>
+    filter(prop_na > threshold) |>
+    mutate(Taxonomic_Level = level_name)
+}
+```
+
+### Proportions
+
+```{r}
+na_prop <- dplyr::bind_rows(
+  calc_na_prop_abund(phylum_long, "Phylum"),
+  calc_na_prop_abund(family_long, "Family"),
+  calc_na_prop_abund(genus_long, "Genus"),
+  calc_na_prop_abund(species_long, "Species")
+)
+
+p <- ggplot(na_prop, aes(x = Taxonomic_Level, y = prop_na, fill = Taxonomic_Level)) +
+  geom_boxplot() +
+  scale_y_continuous(labels = scales::percent_format()) +
+  labs(
+    y = "Proportion of Unidentified Fungi",
+    x = "Taxonomic Level",
+    title = "Proportion of Unidentified Fungi per Taxonomic Level"
+  ) +
+  theme_micro() +
+  theme(legend.position = "none")
+
+# ggsave(
+#   file = "./figures/mycobiome/unidentified_taxa.png",
+#   p,
+#   width = 6,
+#   height = 4,
+#   dpi = 300
+# )
+
+p
+```
+
+### Identifying Samples
+
+```{r}
+high_na_samples <- dplyr::bind_rows(
+  find_high_na(phylum_long, "Phylum"),
+  find_high_na(family_long, "Family"),
+  find_high_na(genus_long, "Genus"),
+  find_high_na(species_long, "Species")
+)
+
+high_na_samples
+
+sample_removal <- high_na_samples |>
+  filter(prop_na > 0.99) |>
+  pull(Sample_ID) |>
+  unique()
+```
+
+### Removal
+
+Samples were removed as outliers if their proportion of unidentified organisms was greater than 0.99.
+
+```{r}
+removal <- function(df, vector) {
+  df |> filter(!(Sample_ID %in% vector))
+}
+
+phylum_long <- removal(phylum_long, sample_removal)
+family_long <- removal(family_long, sample_removal)
+genus_long <- removal(genus_long, sample_removal)
+species_long <- removal(species_long, sample_removal)
+```
+
+# Plotting
+
+## Diversity
+
+Samples were removed as outliers if their diversity metrics were outside of the IQR.
+
+```{r}
+alpha_long <- Alpha.div |>
+  select(-SS_ID) |>
+  mutate(
+    Fiber_restriction = na_if(Fiber_restriction, ""),
+    Fiber_restriction = na_if(Fiber_restriction, "NA"),
+    Fiber_restriction = if_else(is.na(Fiber_restriction), "None", Fiber_restriction),
+    Fiber_restriction = factor(
+      Fiber_restriction,
+      levels = c("None", "Low", "Mid", "High")
+    )
+  ) |>
+  pivot_longer(
+    -all_of(meta_cols),
+    names_to = "Diversity_metric",
+    values_to = "Value"
+  )
+```
+
+```{r}
+alpha_long <- removal(alpha_long, sample_removal)
+```
+
+```{r}
+removal_diversity <- alpha_long |>
+  group_by(Diversity_metric) |>
+  mutate(
+    Q1 = quantile(Value, 0.25, na.rm = TRUE),
+    Q3 = quantile(Value, 0.75, na.rm = TRUE),
+    # Interquartile range often used as a measure of spread
+    # And a threshold to detect outliers
+    IQR = Q3 - Q1,
+    is_outlier = Value < (Q1 - 1.5 * IQR) | Value > (Q3 + 1.5 * IQR)
+  ) |>
+  filter(is_outlier == TRUE) |>
+  pull(Sample_ID)
+
+removal_diversity
+```
+
+```{r}
+phylum_long <- removal(phylum_long, removal_diversity)
+family_long <- removal(family_long, removal_diversity)
+genus_long <- removal(genus_long, removal_diversity)
+species_long <- removal(species_long, removal_diversity)
+
+alpha_long <- removal(alpha_long, removal_diversity)
+
+sort(unique(alpha_long$Sample_ID))
+```
+
+### Study Group
+
+```{r fig.height=6, fig.width=6.5}
+# sample size per group
+n_df <- alpha_long |>
+  group_by(Diversity_metric, Study_group_new) |>
+  summarise(n = n(), .groups = "drop")
+
+div_study <- ggplot(alpha_long, aes(x = Study_group_new, y = Value, fill = Study_group_new)) +
+  geom_boxplot(alpha = 0.7, outlier.size = 0.8) +
+  facet_wrap(~Diversity_metric, ncol = 1, scales = "free_y") +
+  geom_text(
+    data = n_df,
+    aes(x = Study_group_new, y = Inf, label = paste0("n=", n)),
+    vjust = 1.4,
+    size = 3.2,
+    inherit.aes = FALSE
+  ) +
+  scale_y_continuous(
+    limits = c(0, NA),
+    expand = expansion(mult = c(0.05, 0.25))
+  ) +
+  labs(
+    title = "Alpha Diversity by Study Group",
+    x = "Study Group",
+    y = "Diversity Value",
+    fill = "Study Groups"
+  ) +
+  theme_micro() +
+  theme(legend.position = "none")
+
+# ggsave(
+#   file = "./figures/mycobiome/diversity_study_group.png",
+#   div_study,
+#   width = 6,
+#   height = 7,
+#   dpi = 300
+# )
+
+div_study
+```
+
+### Fiber Restriction
+
+```{r fig.height=6, fig.width=6.5}
+# sample size per group
+n_df <- alpha_long |>
+  group_by(Diversity_metric, Fiber_restriction) |>
+  summarise(n = n(), .groups = "drop")
+
+div_fiber <- ggplot(
+  alpha_long,
+  aes(
+    x = Fiber_restriction, y = Value,
+    fill = Fiber_restriction
+  )
+) +
+  geom_boxplot(alpha = 0.7, outlier.size = 0.8) +
+  facet_wrap(~Diversity_metric, ncol = 1, scales = "free_y") +
+  geom_text(
+    data = n_df,
+    aes(x = Fiber_restriction, y = Inf, label = paste0("n=", n)),
+    vjust = 1.4,
+    size = 3.2,
+    inherit.aes = FALSE
+  ) +
+  scale_x_discrete(limits = c("None", "Low", "Mid", "High")) +
+  scale_y_continuous(
+    limits = c(0, NA),
+    expand = expansion(mult = c(0.05, 0.25))
+  ) +
+  labs(
+    title = "Alpha Diversity by Fiber Restricted Diet",
+    x = "Study Group",
+    y = "Diversity value"
+  ) +
+  theme_micro() +
+  theme(legend.position = "none")
+
+# ggsave(
+#   file = "./figures/mycobiome/diversity_fiber.png",
+#   div_fiber,
+#   width = 6,
+#   height = 7,
+#   dpi = 300
+# )
+
+div_fiber
+```
+
+### Inference
+
+```{r}
+# -----------------------------
+# 1. Kruskal–Wallis test
+# -----------------------------
+kw_results <- alpha_long %>%
+  group_by(Diversity_metric) %>%
+  kruskal_test(Value ~ Study_group_new)
+
+# View results
+kw_results
+```
+
+```{r}
+# # -----------------------------
+# # 2. Dunn post-hoc test
+# # (only meaningful if KW is significant)
+# # -----------------------------
+# dunn_results <- alpha_long %>%
+#   group_by(Diversity_metric) %>%
+#   dunn_test(Value ~ Study_group_new,
+#             p.adjust.method = "BH")  # controls FDR
+#
+# # View results
+# dunn_results
+#
+#
+# # -----------------------------
+# # 3. Optional: filter significant results
+# # -----------------------------
+# kw_sig <- kw_results %>%
+#   filter(p < 0.05)
+#
+# dunn_sig <- dunn_results %>%
+#   filter(p.adj < 0.05)
+#
+# kw_sig
+# dunn_sig
+```
+
+## Relative Abundance
+
+### Functions
+
+```{r}
+plot_top_taxa <- function(data, tax_col, n_top = 10) {
+  data_norm <- data |>
+    dplyr::group_by(Sample_ID) |>
+    dplyr::mutate(Rel_abund = Value / sum(Value, na.rm = TRUE)) |>
+    dplyr::ungroup()
+
+  top_taxa <- data_norm |>
+    dplyr::group_by(.data[[tax_col]]) |>
+    dplyr::summarise(mean_abund = mean(Rel_abund, na.rm = TRUE), .groups = "drop") |>
+    dplyr::arrange(dplyr::desc(mean_abund)) |>
+    dplyr::slice_head(n = n_top) |>
+    dplyr::pull(.data[[tax_col]])
+
+  plot_df <- data_norm |>
+    dplyr::mutate(
+      tax_plot = dplyr::if_else(.data[[tax_col]] %in% top_taxa,
+        .data[[tax_col]],
+        "Other"
+      )
+    ) |>
+    dplyr::group_by(Sample_ID, Study_group_new, tax_plot) |>
+    dplyr::summarise(Rel_abund = sum(Rel_abund, na.rm = TRUE), .groups = "drop") |>
+    dplyr::group_by(Study_group_new, tax_plot) |>
+    dplyr::summarise(mean_abund = mean(Rel_abund, na.rm = TRUE), .groups = "drop")
+
+  tax_order <- plot_df |>
+    dplyr::group_by(tax_plot) |>
+    dplyr::summarise(total_abund = mean(mean_abund), .groups = "drop") |>
+    dplyr::arrange(desc(total_abund)) |>
+    dplyr::pull(tax_plot)
+
+  plot_df <- plot_df |>
+    mutate(tax_plot = factor(tax_plot, levels = tax_order))
+
+  ggplot2::ggplot(
+    plot_df,
+    ggplot2::aes(x = Study_group_new, y = mean_abund, fill = tax_plot)
+  ) +
+    ggplot2::geom_col() +
+    ggplot2::labs(fill = tax_col) +
+    ggplot2::coord_cartesian(ylim = c(0, 1)) +
+    ggplot2::scale_y_continuous(
+      expand = ggplot2::expansion(mult = c(0, 0.02))
+    ) +
+    theme_micro()
+}
+```
+
+### Family
+
+```{r}
+family_long <- Family |>
+  tidyr::pivot_longer(-all_of(meta_cols), names_to = "Family", values_to = "Value") |>
+  mutate(Family = clean_tax(Family))
+
+head(family_long)
+
+p <- plot_top_taxa(family_long, "Family", n_top = 10) +
+  labs(
+    title = "Relative Abundance of Top Ten Fungi Families",
+    x = "Study Group",
+    y = "Mean Relative Abundance"
+  )
+
+# ggsave(
+#   file = "./figures/mycobiome/abundance_family.png",
+#   p,
+#   width = 6,
+#   height = 4,
+#   dpi = 300
+# )
+
+p
+```
+
+### Phylum
+
+```{r}
+phylum_long <- Phylum |>
+  pivot_longer(-all_of(meta_cols), names_to = "Phylum", values_to = "Value") |>
+  mutate(Phylum = clean_tax(Phylum))
+
+p <- plot_top_taxa(phylum_long, "Phylum") +
+  labs(
+    title = "Relative Abundance of Fungi Phyla",
+    x = "Study Group",
+    y = "Mean Relative Abundance"
+  )
+
+# ggsave(
+#   file = "./figures/mycobiome/abundance_phylum.png",
+#   p,
+#   width = 6,
+#   height = 4,
+#   dpi = 300
+# )
+
+p
+```
+
+### Genus
+
+```{r}
+genus_long <- Genus |>
+  pivot_longer(-all_of(meta_cols), names_to = "Genus", values_to = "Value") |>
+  mutate(Genus = clean_tax(Genus))
+
+p <- plot_top_taxa(genus_long, "Genus") +
+  labs(
+    title = "Relative Abundance of Top Ten Fungi Genus",
+    x = "Study Group",
+    y = "Mean Relative Abundance"
+  )
+
+
+# ggsave(
+#   file = "./figures/mycobiome/abundance_genus.png",
+#   p,
+#   width = 6,
+#   height = 4,
+#   dpi = 300
+# )
+
+p
+```
+
+### Species
+
+```{r}
+species_long <- Species |>
+  pivot_longer(-all_of(meta_cols), names_to = "Species", values_to = "Value") |>
+  mutate(Species = clean_tax(Species))
+
+head(species_long)
+
+p <- plot_top_taxa(species_long, "Species", n_top = 10) + labs(
+  title = "Relative Abundance of Top Ten Fungi Species",
+  x = "Study Group",
+  y = "Mean Relative Abundance"
+)
+
+# ggsave(
+#   file = "./figures/mycobiome/abundance_species.png",
+#   p,
+#   width = 6,
+#   height = 4,
+#   dpi = 300
+# )
+
+p
+```
+
+## Heatmaps
+
+### Wrangling Function
+
+```{r}
+make_taxa_matrix <- function(df, tax_col, sample_col = "Sample_ID",
+                             value_col = "Value", pseudocount = 1e-6) {
+  # Construct taxa × sample matrix
+  # - Aggregates abundance per taxon per sample
+  # - Converts long format to wide matrix for heatmap input
+  mat <- df |>
+    filter(!is.na(.data[[tax_col]]), .data[[tax_col]] != "NA") |>
+    group_by(.data[[tax_col]], .data[[sample_col]]) |>
+    summarise(abund = sum(.data[[value_col]], na.rm = TRUE), .groups = "drop") |>
+    pivot_wider(
+      names_from = all_of(sample_col),
+      values_from = abund,
+      values_fill = 0
+    ) |>
+    column_to_rownames(tax_col) |>
+    as.matrix()
+
+  # Remove taxa that are absent in all samples
+  # (no signal → adds noise to clustering)
+  mat <- mat[rowSums(mat, na.rm = TRUE) > 0, , drop = FALSE]
+
+  # Remove taxa with no variation across samples
+  # (constant rows cannot contribute to clustering structure)
+  mat <- mat[apply(mat, 1, sd, na.rm = TRUE) > 0, , drop = FALSE]
+
+  # Min prevalence, in 10% of samples
+  min_prev <- ceiling(0.10 * ncol(mat))
+  mat <- mat[rowSums(mat > 0, na.rm = TRUE) >= min_prev, , drop = FALSE]
+
+  # Convert to relative abundance within each sample
+  # (controls for differences in sequencing depth across samples)
+  ##### Data Already in Normalized format ####
+  # rel <- sweep(mat, 2, colSums(mat, na.rm = TRUE), "/")
+
+  # Log-transform already-normalized relative abundance
+  # This reduces dominance of highly abundant taxa for visualization,
+  # but this is not a CLR transformation.
+  # (pseudocount avoids log(0))
+  log_mat <- log10(mat + pseudocount)
+
+  # Row-wise Z-score scaling (per taxon across samples)
+  # (centers each taxon to mean = 0, sd = 1)
+  # (highlights relative patterns rather than absolute abundance)
+  z <- t(scale(t(log_mat)))
+
+  # Replace non-finite values (NaN/Inf) from zero variance or numerical issues
+  z[!is.finite(z)] <- 0
+
+  return(z)
+}
+```
+
+### Pre-processing
+
+```{r}
+family_z <- make_taxa_matrix(family_long, "Family")
+genus_z <- make_taxa_matrix(genus_long, "Genus")
+species_z <- make_taxa_matrix(species_long, "Species")
+phylum_z <- make_taxa_matrix(phylum_long, "Phylum")
+```
+
+### Plotting Function
+
+```{r, fig.height=7, fig.width=8}
+plot_taxa_heatmap <- function(z_mat,
+                              meta_data,
+                              sample_col = "Sample_ID",
+                              group_col = "Study_group_new",
+                              row_label = "Fungal Family",
+                              study_colors = c(
+                                "Non-IBD" = "#4E79A7",
+                                "Active IBD" = "#F28E2B",
+                                "Quiescent" = "#59A14F"
+                              )) {
+  # Build annotation (Sample_ID aligned to matrix columns)
+  annotation_col <- meta_data |>
+    select(all_of(c(sample_col, group_col))) |>
+    distinct() |>
+    filter(.data[[sample_col]] %in% colnames(z_mat)) |>
+    column_to_rownames(sample_col)
+
+  # Ensure same order as matrix
+  annotation_col <- annotation_col[colnames(z_mat), , drop = FALSE]
+
+  # Annotation object
+  ha <- HeatmapAnnotation(
+    `Study Group` = annotation_col[[group_col]],
+    col = list(`Study Group` = study_colors),
+    annotation_name_gp = gpar(fontface = "bold", fontsize = 14),
+    annotation_legend_param = list(
+      `Study Group` = list(
+        title_position = "topcenter",
+        direction = "horizontal",
+        nrow = 1
+      )
+    )
+  )
+
+  # Heatmap
+  ht <- Heatmap(
+    z_mat,
+    name = "Z-score",
+    row_title = row_label,
+    row_title_gp = gpar(fontface = "bold", fontsize = 14),
+    row_names_gp = gpar(fontsize = 10),
+    column_names_gp = gpar(fontsize = 10),
+    column_title = "Sample ID",
+    column_title_gp = gpar(fontface = "bold", fontsize = 14),
+    top_annotation = ha,
+    cluster_rows = TRUE,
+    cluster_columns = TRUE,
+    show_row_names = TRUE,
+    show_column_names = TRUE,
+    column_names_rot = 60,
+    heatmap_legend_param = list(
+      title_position = "topcenter",
+      direction = "horizontal"
+    )
+  )
+
+  draw(
+    ht,
+    heatmap_legend_side = "bottom",
+    annotation_legend_side = "bottom"
+  )
+}
+```
+
+#### Family
+
+```{r, fig.height=7, fig.width=8}
+# png("./figures/mycobiome/heat_family.png",
+#   width = 10,
+#   height = 8,
+#   units = "in",
+#   res = 300
+# )
+
+plot_taxa_heatmap(family_z, meta_data, row_label = "Fungal Family")
+
+# dev.off()
+```
+
+#### Genus
+
+```{r, fig.height=7, fig.width=8}
+# png("./figures/mycobiome/heat_genus.png",
+#   width = 10,
+#   height = 8,
+#   units = "in",
+#   res = 300
+# )
+
+plot_taxa_heatmap(genus_z, meta_data, row_label = "Fungal Genus")
+
+# dev.off()
+```
+
+#### Species
+
+```{r, fig.height=7, fig.width=8}
+# png("./figures/mycobiome/heat_species.png",
+#   width = 10,
+#   height = 8,
+#   units = "in",
+#   res = 300
+# )
+
+plot_taxa_heatmap(species_z, meta_data, row_label = "Fungal Species")
+
+# dev.off()
+```
+
+# Saves
+
+```{r}
+# objs <- c("genus", "family", "phylum", "species")
+# 
+# for (obj in objs) {
+#   write.csv(
+#     get(obj),
+#     file = paste0("./data/processed/", obj, ".csv"),
+#     row.names = FALSE
+#   )
+# }
+```
+
+```{r}
+# objs <- c("genus", "family", "phylum", "species")
+# 
+# for (obj in objs) {
+#   write.csv(
+#     get(obj),
+#     file = paste0("./data/processed/", obj, ".csv"),
+#     row.names = FALSE
+#   )
+# }
+```

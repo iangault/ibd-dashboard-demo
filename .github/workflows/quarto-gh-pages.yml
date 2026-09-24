@@ -1,0 +1,79 @@
+name: Render and deploy Quarto site (stats)
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "stats/**"
+      - "data/processed/**"
+      - "data/intermediate/**"
+      - "renv.lock"
+      - "renv/**"
+      - "src/**"
+      - "scripts/**"
+      - "Makefile"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - name: Install system libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            cmake \
+            libcurl4-openssl-dev \
+            libfontconfig1-dev \
+            libfreetype6-dev \
+            libglpk-dev \
+            libnode-dev \
+            libpng-dev \
+            librsvg2-2 \
+            librsvg2-dev \
+            libx11-dev \
+            pandoc \
+            pkg-config
+
+      - name: Restore renv
+        uses: r-lib/actions/setup-renv@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Generate synthetic raw data
+        run: |
+          pip install pandas numpy openpyxl
+          python3 src/synth_data/generate_fake_raw_data.py
+
+      - name: Run data pipelines
+        run: make mycobiome dietary characteristics merge
+
+      - name: Render site
+        run: quarto render stats
+
+      - name: Deploy to gh-pages
+        uses: quarto-dev/quarto-actions/publish@v2
+        with:
+          target: gh-pages
+          path: stats
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

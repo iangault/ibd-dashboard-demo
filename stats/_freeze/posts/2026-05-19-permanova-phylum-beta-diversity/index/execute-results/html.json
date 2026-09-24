@@ -1,0 +1,17 @@
+{
+  "hash": "12b72feb1cda59902163c00564af1ef0",
+  "result": {
+    "engine": "knitr",
+    "markdown": "---\ntitle: \"PERMANOVA  phylum beta diversity by study group\"\ndescription: \"Bray–Curtis dissimilarity on phylum relative abundance; study-group effect tested with permutational MANOVA.\"\ndate: 2026-05-19\ncategories: [permanova, beta-diversity, phylum, pre-specified]\nauthor: \"IBD Capstone team\"\n---\n\n## Research question\n\nDoes **study group** explain differences in **phylum-level** community composition?\n\n**Null:** Multivariate centroids do not differ among study groups (PERMANOVA on Bray–Curtis distances).\n\n## Data\n\n- **Response:** Phylum relative abundance (`p__*` columns after wide reshape).\n- **Predictor:** `Study_group_new`.\n- **Input:** `data/processed/phylum.csv` (long format from `make save`; pivoted in this post).\n\n## Methods\n\n| Item | Choice |\n|------|--------|\n| Test | PERMANOVA (`vegan::adonis2`) |\n| Distance | Bray–Curtis |\n| Formula | `dist ~ Study_group_new` |\n| Permutations | 999 |\n| Visualization | PCoA (`cmdscale`, k = 2), 95% ellipses |\n\n\n\n## Results\n\n\n::: {.cell}\n::: {.cell-output-display}\n\n\n|Term     | Df| Sum of squares|     R²|      F| Pr(>F)|\n|:--------|--:|--------------:|------:|------:|------:|\n|Model    |  2|         0.3432| 0.1404| 1.0613|  0.412|\n|Residual | 13|         2.1020| 0.8596|     NA|     NA|\n|Total    | 15|         2.4452| 1.0000|     NA|     NA|\n\n\n:::\n:::\n\n\n**Study group** explained **14.0%** of variance in Phylum composition (R² = 0.140; pseudo-F = 1.06; p = 0.4120, 999 permutations).\n\n## Figure\n\n\n::: {.cell layout-align=\"center\"}\n\n```{.r .cell-code}\nplot_pcoa_study_group(\n  fit$dist,\n  fit$metadata,\n  permanova_result,\n  cfg$label\n)\n```\n\n::: {.cell-output-display}\n![PCoA of phylum Bray–Curtis dissimilarity by study group.](index_files/figure-html/fig-pcoa-1.png){#fig-pcoa fig-align='center' width=672}\n:::\n:::\n\n\n\n\n## Reproducibility\n\n- **Helpers:** `stats/R/permanova_helpers.R`\n- **Pipeline:** `make wrangle` → `make save`\n- **Related:** species/genus/family posts in this log; `notebooks/permanova.Rmd`\n",
+    "supporting": [
+      "index_files"
+    ],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

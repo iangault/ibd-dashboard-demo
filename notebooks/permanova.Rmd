@@ -1,0 +1,52 @@
+library(vegan)
+library(ggplot2)
+library(tidyverse)
+
+
+raw_df <- read_csv("data/processed/species.csv")
+
+
+clean_df <- raw_df %>% column_to_rownames(var = "Sample_ID")
+
+metadata <- clean_df %>% select(Participant_ID, Sample_type, Study_group_new, Fiber_restriction)
+mycobiome_data <- clean_df %>% select(starts_with("s__"))
+
+# Calculate the distance matrix
+# method = "bray" for Bray-Curtis
+dist_matrix <- vegdist(mycobiome_data, method = "bray")
+
+# Run the PERMANOVA using the adonis2 function
+# The formula is: distance_matrix ~ grouping_variable
+permanova_result <- adonis2(dist_matrix ~ Study_group_new, 
+                            data = metadata, 
+                            permutations = 999)
+
+# View the p-value and R-squared (how much variance is explained by disease group)
+print(permanova_result)
+
+# Calculate PCoA coordinates
+pcoa_calc <- cmdscale(dist_matrix, k = 2, eig = TRUE)
+
+# Extract the X and Y coordinates for plotting
+pcoa_coords <- as.data.frame(pcoa_calc$points)
+colnames(pcoa_coords) <- c("PCoA1", "PCoA2")
+
+# Calculate the percentage of variance explained by each axis (for your axis labels)
+eigenvalues <- pcoa_calc$eig
+variance_explained <- round(eigenvalues / sum(eigenvalues) * 100, 1)
+
+# Bind the coordinates 
+plot_data <- cbind(pcoa_coords, metadata)
+
+# Build the plot
+ggplot(plot_data, aes(x = PCoA1, y = PCoA2, color = Study_group_new)) +
+  geom_point(size = 3, alpha = 0.8) +
+  stat_ellipse(level = 0.95, linetype = "dashed") + # Adds 95% confidence intervals around groups
+  labs(
+    title = "Species Beta Diversity",
+    subtitle = paste("PERMANOVA p-value =", permanova_result$`Pr(>F)`[1]),
+    x = paste0("PCoA 1 (", variance_explained[1], "%)"),
+    y = paste0("PCoA 2 (", variance_explained[2], "%)")
+  ) +
+  theme_minimal() +
+  theme(legend.position = "right")

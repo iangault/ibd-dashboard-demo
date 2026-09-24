@@ -1,0 +1,99 @@
+---
+title: "PERMANOVA  phylum beta diversity by study group"
+description: "Bray–Curtis dissimilarity on phylum relative abundance; study-group effect tested with permutational MANOVA."
+date: 2026-05-19
+categories: [permanova, beta-diversity, phylum, pre-specified]
+author: "IBD Capstone team"
+---
+
+## Research question
+
+Does **study group** explain differences in **phylum-level** community composition?
+
+**Null:** Multivariate centroids do not differ among study groups (PERMANOVA on Bray–Curtis distances).
+
+## Data
+
+- **Response:** Phylum relative abundance (`p__*` columns after wide reshape).
+- **Predictor:** `Study_group_new`.
+- **Input:** `data/processed/phylum.csv` (long format from `make save`; pivoted in this post).
+
+## Methods
+
+| Item | Choice |
+|------|--------|
+| Test | PERMANOVA (`vegan::adonis2`) |
+| Distance | Bray–Curtis |
+| Formula | `dist ~ Study_group_new` |
+| Permutations | 999 |
+| Visualization | PCoA (`cmdscale`, k = 2), 95% ellipses |
+
+```{r}
+#| label: setup
+#| include: false
+library(here)
+library(knitr)
+# Anchor here to stats/ so paths work both via `quarto render` and interactive IDE sessions.
+here::i_am("posts/2026-05-19-permanova-phylum-beta-diversity/index.qmd")
+source(here::here("R", "permanova_helpers.R"))
+
+level <- "phylum"
+cfg <- TAXA_LEVELS[[level]]
+wide_df <- load_taxa_wide(level)
+fit <- run_permanova_study_group(wide_df, cfg$prefix)
+permanova_result <- fit$permanova
+```
+
+## Results
+
+```{r}
+#| label: permanova-table
+#| echo: false
+knitr::kable(
+  permanova_to_df(permanova_result),
+  digits = 4,
+  col.names = c("Term", "Df", "Sum of squares", "R²", "F", "Pr(>F)")
+)
+```
+
+```{r}
+#| label: results-inline
+#| echo: false
+#| results: asis
+cat(permanova_summary_text(permanova_result, cfg$label))
+```
+
+## Figure
+
+```{r}
+#| label: fig-pcoa
+#| fig-cap: "PCoA of phylum Bray–Curtis dissimilarity by study group."
+#| fig-width: 7
+#| fig-height: 5.5
+#| fig-align: center
+
+plot_pcoa_study_group(
+  fit$dist,
+  fit$metadata,
+  permanova_result,
+  cfg$label
+)
+```
+
+```{r}
+#| label: save-figure
+#| include: false
+dir.create(here("figures"), showWarnings = FALSE, recursive = TRUE)
+ggsave(
+  here("figures", "permanova-phylum-pcoa.png"),
+  width = 7,
+  height = 5.5,
+  dpi = 300
+)
+```
+
+## Reproducibility
+
+- **Helpers:** `stats/R/permanova_helpers.R`
+- **Pipeline:** `make wrangle` → `make save`
+- **Related:** species/genus/family posts in this log; `notebooks/permanova.Rmd`

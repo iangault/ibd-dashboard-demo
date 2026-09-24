@@ -1,0 +1,106 @@
+---
+title: "Mycobiome-Diet Relationship Exploration"
+description: "Statistical figures covering relationships between key dietary and mycobiome markers."
+date: 2026-06-09
+categories: [mycobiome, diet, pre-specified]
+author: "IBD Capstone team"
+format:
+  html:
+    embed-resources: true
+---
+
+## Overview
+
+This post contains figures exporing the relationships between a few key mycobiome (shannon diversity, fecal calprotectin) and dietary (fiber, tryptophan) markers, as well as participant age. The visuals consist of scatterplots overlayed with fitted OLS regression models, and are accompanied by their associated significance values.
+
+```{r}
+# ---- Setup ----
+suppressPackageStartupMessages({
+  library(dplyr)
+  library(ggplot2)
+  library(readr)
+  library(here)
+})
+
+source(here::here("R", "domain_scatterplot_helpers.R"))
+
+# ---- Load Merged Data ----
+
+merged <- read_csv("../../../data/processed/merged.csv", show_col_types = FALSE)
+
+merged <- merged |>
+  mutate(ratio_basidio_asco = p__Basidiomycota / (p__Ascomycota + 1e-6))
+
+inflam <- readRDS("../../../data/intermediate/inflammatory_markers.rds")
+
+# ---- Split Merged Data into Sample and Participant Sets ----
+
+sample_df <- merged |>
+  rename(Disease_status = Study_group_new) |>
+  rename(
+    `Participant_ID`             = `participant_id`,
+    `Fiber (g)`                  = `TotFib (g)`,
+    `Tryptophan (g)`             = `Trp (g)`,
+    `Artificial sweeteners (mg)` = `ArtSw (mg)`,
+    `Calories (kcal)`            = `Cals (kcal)`,
+    Age                          = age,
+    BMI                          = bmi_1,
+    `Harvey-Bradshaw Index`      = harvey_bradshaw_index
+  ) |>
+  mutate(
+    HBI_category = case_when(
+      `Harvey-Bradshaw Index` <= 4 ~ "Remission",
+      `Harvey-Bradshaw Index` <= 7 ~ "Mild",
+      `Harvey-Bradshaw Index`  > 7 ~ "Moderate/Severe"
+    ),
+    HBI_category = factor(HBI_category,
+                          levels = c("Remission", "Mild", "Moderate/Severe"))
+  )
+
+participant_df <- sample_df |>
+  left_join(
+    inflam |> select(Participant_ID, fecal_calprotectin, crp),
+    by = "Participant_ID"
+  ) |>
+  rename(
+    `Fecal Calprotectin` = fecal_calprotectin,
+    CRP                  = crp
+  ) |>
+  distinct(Participant_ID, .keep_all = TRUE)
+```
+
+## Figures
+
+### Fiber X Shannon Diversity
+
+```{r}
+plot_scatter(sample_df, "Fiber (g)", "Shannon", y_label = "Shannon diversity")
+```
+
+### Tryptophan X Shannon Diversity
+
+```{r}
+plot_scatter(sample_df, "Tryptophan (g)", "Shannon", y_label = "Shannon diversity")
+```
+
+### Age X Shannon Diversity
+
+```{r}
+plot_scatter(sample_df, "Age", "Shannon", y_label = "Shannon diversity")
+```
+
+### Fiber X Fecal Calprotectin
+
+```{r}
+plot_scatter(participant_df, "Fiber (g)", "Fecal Calprotectin")
+```
+
+### Tryptophan X Fecal Calprotectin
+
+```{r}
+plot_scatter(participant_df, "Tryptophan (g)", "Fecal Calprotectin")
+```
+
+## Interpretation
+
+These figures offer insight into the distributions of various diet-mycobiome variable relationships. The inclusion of a fitted linear model and p-value allows for surface level OLS inference.

@@ -1,0 +1,213 @@
+---
+title: "Nutrients vs fungal diversity by disease group (Spearman)"
+description: "Spearman correlations between dietary nutrients and alpha diversity, overall and stratified by study group (Active IBD, Quiescent, Non-IBD)."
+date: 2026-05-29
+categories: [pre-specified, alpha-diversity, diet, nutrients]
+author: "IBD Capstone team"
+---
+
+## Research question
+
+Are certain **nutrients** associated with **fungal alpha diversity**, and do those associations **differ across disease groups**?
+
+**Null (overall):** No monotonic association between each nutrient and each alpha diversity metric across all samples.
+
+**Null (stratified):** Within each study group, no monotonic association between nutrient intake and alpha diversity.
+
+Comparing **overall vs group-specific** Spearman \(\rho\) is exploratory (small n per group); formal tests of correlation differences were not run.
+
+## Data
+
+| Role | Source |
+|------|--------|
+| Mycobiome (alpha) | `data/intermediate/alpha_long.rds` (`make wrangle`) |
+| Diet | `data/processed/dietary_cleaned.xlsx` (`make dietary` on `data/raw/SYN_dietary data(ALL).csv`) |
+| Disease group | `Study_group_new` on mycobiome metadata (from `SYN_MBI sample IDs meta.xlsx`) |
+
+- **Unit of analysis:** Stool sample (16 samples, 12 participants); nutrients are **participant means** across diet diary days (same as `merge_files.R`).
+- **Join key:** `Participant_ID` = `Participant ID (ESHA ID)` (normalized SYN codes).
+- **Nutrients:** Pre-specified panel (fiber, tryptophan, calories, sweeteners, sugars, fats, omegas, vitamin D, folate); see helpers.
+- **Inclusion:** Samples retained after `02_data_wrangling.R` removals.
+
+```{r}
+#| label: setup
+#| include: false
+library(dplyr)
+library(tidyr)
+library(knitr)
+library(here)
+# Anchor here to stats/ so paths work both via `quarto render` and interactive IDE sessions.
+here::i_am("posts/2026-05-29-nutrients-diversity-disease-group/index.qmd")
+source(here::here("R", "nutrient_association_helpers.R"))
+
+sample_nutrients <- build_sample_nutrient_table()
+
+n_samples <- nrow(sample_nutrients)
+n_participants <- n_distinct(sample_nutrients$Participant_ID)
+n_with_fiber <- sum(!is.na(sample_nutrients[["TotFib (g)"]]))
+groups <- sort(unique(sample_nutrients$Study_group_new))
+```
+
+**Coverage:** `r n_samples` samples, `r n_participants` participants, `r n_with_fiber` samples with fiber data; study groups: `r paste(groups, collapse = ", ")`.
+
+## Methods
+
+| Item | Choice |
+|------|--------|
+| Test | Spearman rank correlation (`cor.test`, `method = "spearman"`) |
+| Response | Shannon, Simpson, Chao1 |
+| Predictors | Participant-mean nutrient intake (g, kcal, mg as recorded) |
+| Stratification | `Study_group_new` (Active IBD, Quiescent, Non-IBD) + **Overall** |
+| Multiple testing | Benjamini–Hochberg within each stratum (across nutrient × metric pairs) |
+| Minimum n | Correlation only if ≥ 4 complete pairs |
+| Significance | α = 0.05 |
+
+```{r}
+#| label: run-tests
+spearman_results <- spearman_nutrient_alpha(sample_nutrients)
+```
+
+## Assumptions and diagnostics
+
+- **Independence:** Up to two stool replicates per participant; dietary intake is duplicated across replicates. Exploratory only.
+- **Spearman:** Monotonic association; no linearity assumption.
+- **Stratified n:** Few samples per study group limits power; many strata will return `NA` correlations.
+
+## Results
+
+### Overall correlations
+
+```{r}
+#| label: spearman-overall-table
+#| echo: false
+spearman_results |>
+  filter(stratum == "Overall") |>
+  select(nutrient_label, metric, n, rho, p, p_adj) |>
+  knitr::kable(
+    digits = 4,
+    col.names = c("Nutrient", "Alpha metric", "n", "Spearman rho", "p", "BH-adjusted p")
+  )
+```
+
+### Stratified by study group
+
+```{r}
+#| label: spearman-stratified-table
+#| echo: false
+spearman_results |>
+  filter(stratum != "Overall") |>
+  select(stratum, nutrient_label, metric, n, rho, p, p_adj) |>
+  knitr::kable(
+    digits = 4,
+    col.names = c("Study group", "Nutrient", "Alpha metric", "n", "Spearman rho", "p", "BH-adjusted p")
+  )
+```
+
+```{r}
+#| label: spearman-summary
+#| echo: false
+#| results: asis
+sig <- spearman_results |>
+  filter(!is.na(p_adj), p_adj < 0.05)
+
+if (nrow(sig) == 0) {
+  cat("**No nutrient × diversity pairs were significant after BH adjustment (q < 0.05) in any stratum.**\n")
+} else {
+  cat("**Significant after BH adjustment (q < 0.05):**\n\n")
+  for (i in seq_len(nrow(sig))) {
+    cat(sprintf(
+      "- [%s] %s vs %s: rho = %.3f, q = %.4f (n = %d)\n",
+      sig$stratum[i], sig$nutrient_label[i], sig$metric[i],
+      sig$rho[i], sig$p_adj[i], sig$n[i]
+    ))
+  }
+}
+
+# Highlight fiber × Shannon across strata for interpretation
+fiber_shannon <- spearman_results |>
+  filter(nutrient == "TotFib (g)", metric == "Shannon") |>
+  select(stratum, n, rho, p)
+
+cat("\n\n**Total fiber × Shannon (all strata):**\n\n")
+cat(paste(
+  sprintf("%s: rho = %s (n = %d, p = %s)",
+          fiber_shannon$stratum,
+          ifelse(is.na(fiber_shannon$rho), "NA", sprintf("%.3f", fiber_shannon$rho)),
+          fiber_shannon$n,
+          ifelse(is.na(fiber_shannon$p), "NA", sprintf("%.4f", fiber_shannon$p))),
+  collapse = "\n"
+))
+```
+
+## Figures
+
+### Total fiber vs Shannon diversity (by study group)
+
+```{r}
+#| label: fig-fiber-shannon
+#| fig-cap: "Total fiber intake vs Shannon diversity. Points are stool samples; diet is participant-mean intake. Facets show study group."
+#| fig-width: 8
+#| fig-height: 5
+#| fig-align: center
+
+plot_nutrient_alpha_scatter(
+  sample_nutrients,
+  nutrient_col = "TotFib (g)",
+  metric = "Shannon",
+  facet_by = "Study_group_new"
+)
+```
+
+### Tryptophan vs Shannon diversity (by study group)
+
+```{r}
+#| label: fig-trp-shannon
+#| fig-cap: "Tryptophan intake vs Shannon diversity, faceted by study group."
+#| fig-width: 8
+#| fig-height: 5
+#| fig-align: center
+
+plot_nutrient_alpha_scatter(
+  sample_nutrients,
+  nutrient_col = "Trp (g)",
+  metric = "Shannon",
+  facet_by = "Study_group_new"
+)
+```
+
+```{r}
+#| label: save-figures
+#| include: false
+dir.create(here("figures"), showWarnings = FALSE, recursive = TRUE)
+ggsave(
+  here("figures", "nutrients-fiber-shannon-by-group.png"),
+  plot_nutrient_alpha_scatter(
+    sample_nutrients, "TotFib (g)", "Shannon", "Study_group_new"
+  ),
+  width = 8,
+  height = 5,
+  dpi = 300
+)
+ggsave(
+  here("figures", "nutrients-trp-shannon-by-group.png"),
+  plot_nutrient_alpha_scatter(
+    sample_nutrients, "Trp (g)", "Shannon", "Study_group_new"
+  ),
+  width = 8,
+  height = 5,
+  dpi = 300
+)
+```
+
+## Interpretation
+
+Overall Spearman correlations pool all study groups; **stratified** correlations describe associations within Active IBD, Quiescent, and Non-IBD separately. A nutrient may correlate with diversity overall but not within groups (or vice versa) when group-specific slopes differ or sample sizes are small.
+
+These results do **not** test whether two correlation coefficients differ significantly between groups; that would require larger n or dedicated methods (e.g. comparing dependent correlations).
+
+## Reproducibility
+
+- **Helpers:** `stats/R/nutrient_association_helpers.R`
+- **Diet pipeline:** `src/diet/dietary.py`
+- **Merge reference:** `src/merge_files.R` (`aggregate_dietary`)
+- **Render:** `quarto render stats` from repository root

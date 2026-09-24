@@ -1,0 +1,41 @@
+project:
+  type: website
+  output-dir: _site
+
+website:
+  title: "IBD Mycobiome Stats (demo)"
+  description: "Methods, results, and figures for pre-specified and exploratory analyses"
+  site-url: "https://iangault.github.io/ibd-dashboard-demo/"
+  repo-url: "https://github.com/iangault/ibd-dashboard-demo"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      - href: eda.qmd
+        text: Exploratory Analysis
+      - href: pre-specified.qmd
+        text: Pre-specified Tests
+      - href: _template.qmd
+        text: New Analysis Template
+    right:
+      - icon: github
+        href: "https://github.com/iangault/ibd-dashboard-demo"
+        aria-label: GitHub
+
+format:
+  html:
+    theme:
+      light: cosmo
+      dark: darkly
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-fold: true
+    code-summary: "Show code"
+    fig-cap-location: bottom
+    embed-resources: false
+
+execute:
+  freeze: auto
+  warning: false
+  message: false

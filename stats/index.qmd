@@ -1,0 +1,64 @@
+---
+title: "Analysis Log"
+subtitle: "Reproducible Framework for Multi-Omics Analysis in IBD"
+listing:
+  contents: posts
+  sort: "date desc"
+  type: default
+  categories: true
+  sort-ui: false
+  filter-ui: false
+  fields: [date, title, categories, description]
+---
+
+This site documents every statistical analysis in the project: the method and software settings, tabulated results, interpretation, and the plots that go with each analysis.
+
+::: {.callout-note}
+All results on this site are computed from **synthetic data**. They show how the analyses work and are not real study findings.
+:::
+
+## Team
+
+- **Team**: Tiffany Chu, Victoria Farkas, Ian Gault, Derrick Jaskiel
+- **Mentor**: Payman Nickchi
+
+## Where to find analyses
+
+| Tab | YAML category | Contents |
+|-----|---------------|----------|
+| [Exploratory Analysis](eda.qmd) | `eda` | Heatmaps and descriptive pipeline figures (no hypothesis test) |
+| [Pre-specified Tests](pre-specified.qmd) | `pre-specified` | PERMANOVA, Kruskal–Wallis, Spearman, PCA/clustering, evidence-ranking matrix |
+
+The home page lists **all** posts. Use the navbar tabs to filter by type.
+
+## Initial exploration notebooks
+
+Early-stage notebooks in `notebooks/` are preserved for reference.
+
+| Notebook | Contents |
+|----------|----------|
+| `notebooks/stool_eda.Rmd` | Stool mycobiome EDA, alpha diversity, Dunn post-hoc |
+| `notebooks/permanova.Rmd` | PERMANOVA and PCoA development |
+| `notebooks/pca_tsne.Rmd` | PCA and t-SNE exploration |
+| `notebooks/mycobiome_interactive.Rmd` | Interactive abundance visualizations |
+
+| Analysis | Source |
+|----------|--------|
+| PERMANOVA + PCoA (phylum, family, genus, species) | `stats/posts/2026-05-19-permanova-*`, `stats/R/permanova_helpers.R`, `notebooks/permanova.Rmd` |
+| Symptoms × fungal composition (Spearman + PERMANOVA) | `stats/posts/2026-05-22-symptoms-fungal-composition/`, `stats/R/symptom_association_helpers.R` |
+| Nutrients × diversity by disease group (Spearman) | `stats/posts/2026-05-29-nutrients-diversity-disease-group/`, `stats/R/nutrient_association_helpers.R` |
+| Diet + mycobiome PCA / clustering | `stats/posts/2026-05-29-diet-mycobiome-pca-clustering/`, `stats/R/pca_clustering_helpers.R`, `notebooks/pca_tsne.Rmd` |
+| Evidence-ranking matrix (disease group) | `stats/posts/2026-05-29-evidence-ranking-disease-group/`, `stats/R/evidence_ranking_helpers.R` |
+| Kruskal–Wallis (alpha diversity) | `src/mycobiome/03b_diversity_stats.R`, `notebooks/stool_eda.Rmd` |
+| PCA / t-SNE | `notebooks/pca_tsne.Rmd` |
+
+## How to add a new analysis
+
+1. Copy `stats/_template.qmd` into a new folder, e.g. `stats/posts/2026-05-19-my-test/index.qmd`.
+2. Fill in the YAML (`title`, `date`, `categories`, `description`) — tag with `eda` or `pre-specified` as appropriate.
+3. Fill in each section: research question → data → methods → results → plot.
+4. Render from the repo root:
+   ```bash
+   quarto render stats
+   ```
+   Or use **Render** in RStudio / Positron.

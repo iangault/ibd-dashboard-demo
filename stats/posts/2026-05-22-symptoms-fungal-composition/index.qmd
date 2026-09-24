@@ -1,0 +1,210 @@
+---
+title: "Symptom scores vs fungal composition (Spearman and PERMANOVA)"
+description: "Survey symptom scores (HBI and related items) tested against alpha diversity (Spearman) and genus beta diversity (PERMANOVA on Bray–Curtis)."
+date: 2026-05-22
+categories: [pre-specified, alpha-diversity, beta-diversity, genus, symptoms]
+author: "IBD Capstone team"
+---
+
+## Research question
+
+Are **symptom scores** from participant surveys associated with **fungal composition** (alpha and beta diversity)?
+
+**Null (Spearman):** No monotonic association between each symptom score and each alpha diversity metric.
+
+**Null (PERMANOVA):** Genus-level community composition is not associated with the symptom score after accounting for Bray–Curtis distance structure.
+
+## Data
+
+| Role | Source |
+|------|--------|
+| Mycobiome (alpha) | `data/intermediate/alpha_long.rds` (`make wrangle`) |
+| Mycobiome (genus beta) | `data/processed/genus.csv` (`make save`) |
+| Survey / symptoms | `data/processed/cleaned_characteristics.csv` (`make characteristics` on `data/raw/SYN_Participant Characteristics(Sheet1).csv`) |
+
+- **Unit of analysis:** Stool sample (16 samples, 12 participants with mycobiome data).
+- **Join key:** `Participant_ID` (mycobiome) = `participant_id` (characteristics); one characteristics row per participant used when duplicates exist.
+- **Symptom scores:** Numeric fields and ordinally coded items parsed to numbers (e.g. `Mild = 1`, `4\tSOME OF THE TIME` → 4). Primary focus: **Harvey–Bradshaw Index (HBI)**; additional exploratory symptoms in the correlation table.
+- **Inclusion:** Samples retained after `02_data_wrangling.R` removals; PERMANOVA genus analysis uses samples with non-missing HBI.
+
+```{r}
+#| label: setup
+#| include: false
+library(dplyr)
+library(tidyr)
+library(knitr)
+library(here)
+# Anchor here to stats/ so paths work both via `quarto render` and interactive IDE sessions.
+here::i_am("posts/2026-05-22-symptoms-fungal-composition/index.qmd")
+source(here::here("R", "symptom_association_helpers.R"))
+
+sample_symptoms <- build_sample_symptom_table()
+genus_wide <- load_taxa_wide("genus") |>
+  left_join(
+    load_symptom_scores(),
+    by = "Participant_ID"
+  )
+
+n_samples <- nrow(sample_symptoms)
+n_participants <- n_distinct(sample_symptoms$Participant_ID)
+n_hbi <- sum(!is.na(sample_symptoms$harvey_bradshaw_index))
+```
+
+**Coverage:** `r n_samples` samples, `r n_participants` participants; `r n_hbi` samples with non-missing HBI.
+
+## Methods
+
+| Item | Spearman (symptoms × alpha) | PERMANOVA (symptoms × taxa) |
+|------|----------------------------|-----------------------------|
+| Test | Spearman rank correlation (`cor.test`, `method = "spearman"`) | `vegan::adonis2` |
+| Response | Shannon, Simpson, Chao1 | Genus Bray–Curtis dissimilarity |
+| Predictor | Parsed symptom scores | Harvey–Bradshaw Index (continuous) |
+| Multiple testing | Benjamini–Hochberg across all symptom × metric pairs | Exploratory single predictor |
+| Permutations | — | 999 |
+| Significance | α = 0.05 | α = 0.05 |
+
+```{r}
+#| label: run-tests
+spearman_results <- spearman_symptom_alpha(sample_symptoms)
+
+permanova_hbi <- run_permanova_symptom(
+  genus_wide,
+  prefix = TAXA_LEVELS$genus$prefix,
+  symptom_col = "harvey_bradshaw_index"
+)
+```
+
+## Assumptions and diagnostics
+
+- **Independence:** Samples are not fully independent (up to two stool replicates per participant). Results are exploratory; consider participant-level sensitivity analyses if reporting formally.
+- **Spearman:** Tests monotonic association; does not assume linearity or normality.
+- **PERMANOVA:** Exchangeability under permutations; composition constrained to genus relative abundance (Bray–Curtis).
+- **Missing symptoms:** HBI and other scores are not available for all participants (see coverage above).
+
+## Results
+
+### Spearman: symptom scores × alpha diversity
+
+```{r}
+#| label: spearman-table
+#| echo: false
+spearman_results |>
+  select(symptom_label, metric, n, rho, p, p_adj) |>
+  knitr::kable(
+    digits = 4,
+    col.names = c("Symptom", "Alpha metric", "n", "Spearman rho", "p", "BH-adjusted p")
+  )
+```
+
+```{r}
+#| label: spearman-summary
+#| echo: false
+#| results: asis
+sig <- spearman_results |>
+  filter(!is.na(p_adj), p_adj < 0.05)
+
+if (nrow(sig) == 0) {
+  cat("**No symptom × alpha pairs were significant after BH adjustment (q < 0.05).**\n")
+} else {
+  cat("**Significant after BH adjustment (q < 0.05):**\n\n")
+  for (i in seq_len(nrow(sig))) {
+    cat(sprintf(
+      "- %s vs %s: rho = %.3f, q = %.4f (n = %d)\n",
+      sig$symptom_label[i], sig$metric[i], sig$rho[i], sig$p_adj[i], sig$n[i]
+    ))
+  }
+}
+```
+
+### PERMANOVA: genus composition ~ HBI
+
+```{r}
+#| label: permanova-table
+#| echo: false
+knitr::kable(
+  permanova_to_df(permanova_hbi$permanova),
+  digits = 4,
+  col.names = c("Term", "Df", "Sum of squares", "R²", "F", "Pr(>F)")
+)
+```
+
+```{r}
+#| label: permanova-summary
+#| echo: false
+#| results: asis
+r2 <- permanova_hbi$permanova$R2[1]
+p <- permanova_hbi$permanova$`Pr(>F)`[1]
+cat(sprintf(
+  "**Harvey–Bradshaw Index** explained **%.1f%%** of variance in genus composition (R² = %.3f; pseudo-F = %.2f; p = %.4f, 999 permutations; n = %d samples with HBI).",
+  100 * r2,
+  r2,
+  permanova_hbi$permanova$F[1],
+  p,
+  nrow(permanova_hbi$metadata)
+))
+```
+
+## Figures
+
+### HBI vs Shannon diversity (Spearman)
+
+```{r}
+#| label: fig-hbi-shannon
+#| fig-cap: "Harvey–Bradshaw Index vs Shannon diversity by study group. Subtitle shows Spearman correlation across samples with complete data."
+#| fig-width: 7
+#| fig-height: 5
+#| fig-align: center
+
+plot_symptom_alpha_scatter(
+  sample_symptoms,
+  symptom_col = "harvey_bradshaw_index",
+  metric = "Shannon"
+)
+```
+
+### Genus PCoA coloured by HBI (PERMANOVA)
+
+```{r}
+#| label: fig-pcoa-hbi
+#| fig-cap: "PCoA of genus Bray–Curtis dissimilarity; points coloured by Harvey–Bradshaw Index."
+#| fig-width: 7
+#| fig-height: 5.5
+#| fig-align: center
+
+plot_pcoa_symptom(
+  permanova_hbi,
+  TAXA_LEVELS$genus$label
+)
+```
+
+```{r}
+#| label: save-figures
+#| include: false
+dir.create(here("figures"), showWarnings = FALSE, recursive = TRUE)
+ggsave(
+  here("figures", "symptoms-hbi-shannon.png"),
+  plot_symptom_alpha_scatter(sample_symptoms, "harvey_bradshaw_index", "Shannon"),
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+ggsave(
+  here("figures", "symptoms-permanova-genus-hbi-pcoa.png"),
+  plot_pcoa_symptom(permanova_hbi, TAXA_LEVELS$genus$label),
+  width = 7,
+  height = 5.5,
+  dpi = 300
+)
+```
+
+## Interpretation
+
+Spearman correlations describe **pairwise monotonic links** between symptom scores and alpha metrics at the sample level; they do not adjust for repeated measures per participant. PERMANOVA tests whether **multivariate genus composition** covaries with HBI across samples; a non-significant p-value does not rule out associations with individual taxa or other symptom instruments.
+
+Correlation among symptoms and small sample size limit power; treat findings as **exploratory** unless pre-registered.
+
+## Reproducibility
+
+- **Helpers:** `stats/R/symptom_association_helpers.R`, `stats/R/permanova_helpers.R`
+- **Optional merged table:** `make merge` builds `data/processed/merged.csv` for dashboard use; this post joins the same sources directly.
+- **Render:** `quarto render stats` from repository root

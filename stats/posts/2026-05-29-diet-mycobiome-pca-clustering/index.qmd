@@ -1,0 +1,248 @@
+---
+title: "PCA and clustering on combined diet and mycobiome profiles"
+description: "Participant-level PCA of scaled nutrient intake and genus relative abundance, with hierarchical clustering to explore diet–mycobiome groupings."
+date: 2026-05-29
+categories: [pre-specified, pca, clustering, diet, genus]
+author: "IBD Capstone team"
+---
+
+## Research question
+
+Can **participants** be grouped by combined **diet (nutrients)** and **mycobiome (genus taxa)** profiles?
+
+**Pre-specified method; exploratory interpretation:** with 12 participants, PCA and clustering describe patterns in the data but do not provide stable cluster validation (no formal cluster significance testing).
+
+## Data
+
+| Role | Source |
+|------|--------|
+| Genus taxa | `data/processed/genus.csv` (`make save`) |
+| Diet | `data/processed/dietary_cleaned.xlsx` |
+| Disease group (reference) | `Study_group_new` on mycobiome metadata |
+
+- **Unit of analysis:** **Participant** (one row per `Participant_ID`).
+- **Mycobiome:** Mean genus relative abundance across stool samples per participant.
+- **Diet:** Mean nutrient intake across diary days per participant (same as `merge_files.R`).
+- **Features:** Panel of nutrients from `NUTRIENT_FIELDS` plus all genus columns (`g__*`) with non-zero variance across participants.
+- **Preprocessing:** Features are centered and scaled before PCA and clustering.
+
+```{r}
+#| label: setup
+#| include: false
+library(dplyr)
+library(tidyr)
+library(knitr)
+library(here)
+# Anchor here to stats/ so paths work both via `quarto render` and interactive IDE sessions.
+here::i_am("posts/2026-05-29-diet-mycobiome-pca-clustering/index.qmd")
+source(here::here("R", "pca_clustering_helpers.R"))
+
+participant_df <- build_participant_feature_table()
+feature_list <- prepare_clustering_features(participant_df)
+pca_fit <- run_feature_pca(feature_list)
+cluster_fit <- run_hclust_clusters(feature_list, k_values = c(2L, 3L))
+scores <- add_clusters_to_scores(pca_fit$scores, cluster_fit)
+
+n_participants <- nrow(scores)
+n_features <- length(feature_list$features)
+```
+
+**Coverage:** `r n_participants` participants, `r n_features` features (`r feature_list$n_nutrients` nutrients + `r feature_list$n_taxa` genera).
+
+## Methods
+
+| Item | Choice |
+|------|--------|
+| Integration | Left-join participant-mean genus abundances and nutrients on `Participant_ID` |
+| PCA | `stats::prcomp`, `center = TRUE`, `scale. = TRUE` |
+| Clustering | Hierarchical (Ward.D2) on Euclidean distance of scaled features |
+| Cluster sizes | k = 2 and k = 3 (`cutree`) |
+| Reference labels | `Study_group_new` overlaid on PCA (not used to fit clusters) |
+| Notebook reference | `notebooks/pca_tsne.Rmd` (taxa-only PCA/t-SNE) |
+
+```{r}
+#| label: run-analysis
+# Results objects created in setup: pca_fit, cluster_fit, scores
+```
+
+## Assumptions and diagnostics
+
+- **Sample size:** 12 participants; PCA axes and clusters are unstable and sensitive to outliers.
+- **Scale:** Nutrients (g, kcal, mg) and compositional genus proportions are jointly z-scored; relative weighting is arbitrary but standard for integrated PCA.
+- **Compositional data:** Genus abundances are not CLR-transformed here; results complement Bray–Curtis / PERMANOVA analyses on taxa alone.
+- **Independence:** Technical stool replicates are averaged before analysis.
+
+## Results
+
+### Variance explained
+
+```{r}
+#| label: variance-table
+#| echo: false
+pca_fit$variance_df |>
+  filter(Component <= min(10L, n_participants)) |>
+  mutate(
+    Variance = round(Variance * 100, 2),
+    Cumulative = round(Cumulative * 100, 2)
+  ) |>
+  knitr::kable(
+    col.names = c("PC", "Component", "Variance (%)", "Cumulative (%)")
+  )
+```
+
+```{r}
+#| label: variance-summary
+#| echo: false
+#| results: asis
+v <- pca_fit$variance_df
+cat(sprintf(
+  "PC1 and PC2 explain **%.1f%%** and **%.1f%%** of variance (cumulative PC1–3: **%.1f%%**).",
+  100 * v$Variance[1],
+  100 * v$Variance[2],
+  100 * v$Cumulative[min(3L, nrow(v))]
+))
+```
+
+### Clusters vs study group
+
+```{r}
+#| label: cluster-table-k2
+#| echo: false
+knitr::kable(
+  cluster_study_group_table(scores, "k2"),
+  caption = "Participant counts: hierarchical clusters (k = 2) vs study group"
+)
+```
+
+```{r}
+#| label: cluster-table-k3
+#| echo: false
+knitr::kable(
+  cluster_study_group_table(scores, "k3"),
+  caption = "Participant counts: hierarchical clusters (k = 3) vs study group"
+)
+```
+
+```{r}
+#| label: cluster-interpretation
+#| echo: false
+#| results: asis
+cat(
+  "Clusters are **unsupervised** and need not align with clinical study group. ",
+  "Compare tables and PCA colours to see whether diet–mycobiome structure tracks disease status or forms separate groupings.",
+  sep = ""
+)
+```
+
+## Figures
+
+### Cumulative variance (scree)
+
+```{r}
+#| label: fig-variance
+#| fig-cap: "Cumulative proportion of variance explained by principal components."
+#| fig-width: 7
+#| fig-height: 4.5
+#| fig-align: center
+
+plot_pca_variance(pca_fit$variance_df, max_pc = min(10L, n_participants))
+```
+
+### PCA scores (PC1 vs PC2)
+
+```{r}
+#| label: fig-pca-study-group
+#| fig-cap: "PCA of combined nutrient and genus features. Points are participants; colour is study group."
+#| fig-width: 8
+#| fig-height: 5.5
+#| fig-align: center
+
+plot_pca_scores(
+  scores,
+  colour_col = "Study_group_new",
+  variance_df = pca_fit$variance_df,
+  title = NULL
+)
+```
+
+### PCA with hierarchical clusters (k = 2)
+
+```{r}
+#| label: fig-pca-k2
+#| fig-cap: "Same PCA space with point shape indicating Ward clusters (k = 2)."
+#| fig-width: 8
+#| fig-height: 5.5
+#| fig-align: center
+
+plot_pca_scores(
+  scores,
+  colour_col = "Study_group_new",
+  shape_col = "k2",
+  variance_df = pca_fit$variance_df,
+  title = "PCA with hierarchical clusters (k = 2)"
+)
+```
+
+### Top PC1 loadings
+
+```{r}
+#| label: fig-loadings
+#| fig-cap: "Features with largest absolute loadings on PC1 (nutrients and genera)."
+#| fig-width: 7
+#| fig-height: 5
+#| fig-align: center
+
+plot_top_pca_loadings(pca_fit$loadings, pc = "PC1", n_top = 10L)
+```
+
+### Clustering dendrogram
+
+```{r}
+#| label: fig-dendrogram
+#| fig-cap: "Ward hierarchical clustering dendrogram on scaled diet + genus features (participant IDs as leaves)."
+#| fig-width: 8
+#| fig-height: 5
+#| fig-align: center
+#| warning: false
+
+plot_cluster_dendrogram(cluster_fit)
+```
+
+```{r}
+#| label: save-figures
+#| include: false
+dir.create(here("figures"), showWarnings = FALSE, recursive = TRUE)
+ggsave(
+  here("figures", "pca-diet-mycobiome-by-group.png"),
+  plot_pca_scores(scores, "Study_group_new", variance_df = pca_fit$variance_df),
+  width = 8,
+  height = 5.5,
+  dpi = 300
+)
+ggsave(
+  here("figures", "pca-diet-mycobiome-variance.png"),
+  plot_pca_variance(pca_fit$variance_df, max_pc = min(10L, n_participants)),
+  width = 7,
+  height = 4.5,
+  dpi = 300
+)
+ggsave(
+  here("figures", "pca-diet-mycobiome-loadings-pc1.png"),
+  plot_top_pca_loadings(pca_fit$loadings, "PC1", 10L),
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+```
+
+## Interpretation
+
+PCA reduces the joint nutrient + genus feature space to orthogonal axes for visualization. If participants with similar diets and mycobiomes sit near each other, they may form visual groups; **formal cluster validity was not assessed** (silhouette, gap statistic, etc.) given small n.
+
+Hierarchical clusters partition participants without using `Study_group_new`. Agreement between clusters and clinical group supports an integrated diet–mycobiome signal; disagreement suggests heterogeneity within disease labels or driven by diet/taxa not captured by group alone.
+
+## Reproducibility
+
+- **Helpers:** `stats/R/pca_clustering_helpers.R`, `stats/R/nutrient_association_helpers.R`, `stats/R/permanova_helpers.R`
+- **Notebook:** `notebooks/pca_tsne.Rmd` (taxa-only PCA/t-SNE)
+- **Render:** `quarto render stats` from repository root

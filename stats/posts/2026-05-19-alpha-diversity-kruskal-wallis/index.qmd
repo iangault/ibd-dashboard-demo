@@ -1,0 +1,172 @@
+---
+title: "Kruskal–Wallis  alpha diversity by study group and fibre restriction"
+description: "Non-parametric comparison of Shannon, richness, and other alpha metrics across study group and fibre-restriction levels."
+date: 2026-05-19
+categories: [alpha-diversity, pre-specified]
+author: "IBD Capstone team"
+---
+
+## Research question
+
+1. Do **alpha diversity metrics** differ across **study group**?
+2. Do they differ across **fibre restriction** level (None, Low, Mid, High)?
+
+**Null (each metric):** Distributions are equal across groups.
+
+## Data
+
+- **Response:** `Value` (alpha diversity metric).
+- **Predictors:** `Study_group_new`, `Fiber_restriction`.
+- **Unit:** Sample (one row per sample × metric in long format).
+- **Input:** `data/intermediate/alpha_long.rds` (from `make wrangle`).
+- **Pre-specified script:** `src/mycobiome/03b_diversity_stats.R`.
+
+## Methods
+
+| Item | Choice |
+|------|--------|
+| Test | Kruskal–Wallis (`rstatix::kruskal_test`) |
+| Stratification | One test per `Diversity_metric` (`group_by(Diversity_metric)`) |
+| Formulae | `Value ~ Study_group_new`; `Value ~ Fiber_restriction` |
+| Post-hoc | Not run in pipeline (Dunn + BH commented in `stool_eda.Rmd`) |
+| Significance | α = 0.05 (uncorrected across metrics) |
+
+```{r}
+#| label: setup
+#| include: false
+library(dplyr)
+library(rstatix)
+library(ggplot2)
+library(tidyr)
+library(here)
+# Anchor here to stats/ so paths work both via `quarto render` and interactive IDE sessions.
+# Without this, interactive sessions anchor to the .Rproj root and here::here("..") breaks.
+here::i_am("posts/2026-05-19-alpha-diversity-kruskal-wallis/index.qmd")
+
+alpha_long <- readRDS(here::here("..", "data", "intermediate", "alpha_long.rds"))
+```
+
+```{r}
+#| label: run-tests
+kw_diversity_group <- alpha_long |>
+  group_by(Diversity_metric) |>
+  kruskal_test(Value ~ Study_group_new)
+
+kw_diversity_fibre <- alpha_long |>
+  group_by(Diversity_metric) |>
+  kruskal_test(Value ~ Fiber_restriction)
+```
+
+## Assumptions and diagnostics
+
+- Kruskal–Wallis compares **distributions** (rank-based); does not assume normality.
+- **Independence:** assumed for samples; repeated measures per participant not modelled here.
+- **Multiple metrics:** several diversity indices tested; consider FDR if reporting many metrics together.
+
+## Results
+
+### By study group
+
+```{r}
+#| label: kw-group-table
+#| echo: false
+knitr::kable(kw_diversity_group, digits = 4)
+```
+
+### By fibre restriction
+
+```{r}
+#| label: kw-fibre-table
+#| echo: false
+knitr::kable(kw_diversity_fibre, digits = 4)
+```
+
+```{r}
+#| label: sig-summary
+#| echo: false
+#| results: asis
+sig_group <- kw_diversity_group |> filter(p < 0.05)
+sig_fibre <- kw_diversity_fibre |> filter(p < 0.05)
+cat("**Significant by study group (p < 0.05):** ",
+    if (nrow(sig_group) == 0) "none" else paste(sig_group$Diversity_metric, collapse = ", "),
+    "\n\n",
+    "**Significant by fibre restriction (p < 0.05):** ",
+    if (nrow(sig_fibre) == 0) "none" else paste(sig_fibre$Diversity_metric, collapse = ", "),
+    sep = "")
+```
+
+## Figure
+
+Boxplots of alpha diversity by study group (one panel per metric).
+
+```{r}
+#| label: fig-alpha-IBD-boxplots
+#| fig-cap: "Alpha diversity by study group. Kruskal–Wallis p-values are in the results tables above."
+#| fig-width: 8
+#| fig-height: 6
+#| fig-align: center
+
+p_group <- ggplot(
+  alpha_long,
+  aes(x = Study_group_new, y = Value, fill = Study_group_new)
+) +
+  geom_boxplot(outlier.shape = NA, alpha = 0.85) +
+  geom_jitter(width = 0.15, alpha = 0.5, size = 1) +
+  facet_wrap(~ Diversity_metric, scales = "free_y") +
+  labs(
+    x = NULL,
+    y = "Alpha diversity value",
+    fill = "Study group"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(angle = 25, hjust = 1)
+  )
+p_group
+```
+
+```{r}
+#| label: fig-alpha-fibre-boxplots
+#| fig-cap: "Alpha diversity by fibre restrictive diet. Kruskal–Wallis p-values are in the results tables above."
+#| fig-width: 8
+#| fig-height: 6
+#| fig-align: center
+
+p_fibre <- ggplot(
+  alpha_long,
+  aes(x = Fiber_restriction, y = Value, fill = Fiber_restriction)
+) +
+  geom_boxplot(outlier.shape = NA, alpha = 0.85) +
+  geom_jitter(width = 0.15, alpha = 0.5, size = 1) +
+  facet_wrap(~ Diversity_metric, scales = "free_y") +
+  labs(
+    x = NULL,
+    y = "Alpha diversity value",
+    fill = "Fibre Restriction",
+    title = "Alpha diversity by fibre restricted diets"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(angle = 25, hjust = 1)
+  )
+p_fibre
+```
+
+```{r}
+#| label: save-figures
+#| include: false
+fig_dir <- here::here("figures")
+ggsave(file.path(fig_dir, "alpha-diversity-kw-by-group.png"), plot = p_group, width = 8, height = 6, dpi = 300)
+ggsave(file.path(fig_dir, "alpha-diversity-kw-by-fibre.png"), plot = p_fibre, width = 8, height = 6, dpi = 300)
+```
+
+## Interpretation
+
+Significant Kruskal–Wallis results indicate **at least one group** differs in distribution for that metric; they do not identify which pairs differ. Use Dunn tests (with multiplicity adjustment) in a follow-up post if needed.
+
+## Reproducibility
+
+- **Notebook:** `notebooks/stool_eda.Rmd` (§ Inference)
+- **Makefile target:** `make diversity-stats`

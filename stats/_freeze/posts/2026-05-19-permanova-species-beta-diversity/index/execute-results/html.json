@@ -1,0 +1,17 @@
+{
+  "hash": "8ea7f2c1dd44acd5ee8b7a199a3cbe9b",
+  "result": {
+    "engine": "knitr",
+    "markdown": "---\ntitle: \"PERMANOVA species beta diversity by study group\"\ndescription: \"Bray–Curtis dissimilarity on species relative abundance; group effect tested with permutational MANOVA.\"\ndate: 2026-05-19\ncategories: [permanova, beta-diversity, species, pre-specified]\nauthor: \"IBD Capstone team\"\n---\n\n## Research question\n\nDoes **study group** (Non-IBD, Active IBD, Quiescent) explain differences in **species-level community composition** (beta diversity)?\n\n**Null:** Centroids (and dispersion, under default `adonis2`) do not differ among study groups.\n\n## Data\n\n- **Response:** Species relative abundance (`s__*` columns after wide reshape).\n- **Predictor:** `Study_group_new`.\n- **Unit:** Stool sample (`Sample_ID`).\n- **Input:** `data/processed/species.csv` (long format from `make save`; pivoted via `load_taxa_wide()`).\n- **Covariates in this model:** none (add to formula if extended later).\n\n## Methods\n\n| Item | Choice |\n|------|--------|\n| Test | PERMANOVA (`vegan::adonis2`) |\n| Distance | Bray–Curtis (`vegan::vegdist`, `method = \"bray\"`) |\n| Formula | `dist_matrix ~ Study_group_new` |\n| Permutations | 999 |\n| Ordination (visualization) | PCoA (`stats::cmdscale`, k = 2) |\n| Ellipses | 95% normal ellipses on PCoA (`ggplot2::stat_ellipse`) |\n\n\n\n## Assumptions and diagnostics\n\n- PERMANOVA is **permutation-based**; does not assume multivariate normality.\n- **Homogeneity of dispersion:** not checked in this post; consider `betadisper()` + `permutest()` if interpretation hinges on location vs dispersion.\n- **Pseudo-F** and **R²** are reported by `adonis2` for the grouping term.\n\n## Results\n\n\n::: {.cell}\n::: {.cell-output-display}\n\n\n|Term     | Df| Sum of squares|     R²|      F| Pr(>F)|\n|:--------|--:|--------------:|------:|------:|------:|\n|Model    |  2|         0.2620| 0.1454| 1.1061|  0.266|\n|Residual | 13|         1.5398| 0.8546|     NA|     NA|\n|Total    | 15|         1.8018| 1.0000|     NA|     NA|\n\n\n:::\n:::\n\n\n**Study group** explained **14.5%** of variance in Species composition (R² = 0.145; pseudo-F = 1.11; p = 0.2660, 999 permutations).\n\n## Figure\n\nPCoA of Bray–Curtis distances, coloured by study group.\n\n\n::: {.cell layout-align=\"center\"}\n\n```{.r .cell-code}\nplot_pcoa_study_group(\n  fit$dist,\n  fit$metadata,\n  permanova_result,\n  cfg$label\n)\n```\n\n::: {.cell-output-display}\n![PCoA of species Bray–Curtis dissimilarity. Points are samples; dashed ellipses are 95% normal ellipses by study group.](index_files/figure-html/fig-pcoa-permanova-1.png){#fig-pcoa-permanova fig-align='center' width=672}\n:::\n:::\n\n\n\n\n## Interpretation\n\nA significant PERMANOVA indicates **differences in community composition** among study groups in this distance-based framework. Follow-up may include pairwise PERMANOVA, dispersion tests, or differential abundance methods; those should be logged as separate posts.\n\n## Reproducibility\n\n- **Notebook:** `notebooks/permanova.Rmd`\n- **Helpers:** `stats/R/permanova_helpers.R`\n- **Pipeline:** `make wrangle` → `make save`\n- **Render site:** `quarto render stats` from repository root\n",
+    "supporting": [
+      "index_files"
+    ],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

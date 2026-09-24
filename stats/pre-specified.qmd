@@ -1,0 +1,24 @@
+---
+title: "Pre-specified Tests"
+listing:
+  contents: posts
+  sort: "date desc"
+  type: default
+  categories: true
+  sort-ui: false
+  filter-ui: false
+  fields: [date, title, categories, description]
+  include:
+    categories: "pre-specified"
+---
+
+Hypothesis tests where the null, method, and significance threshold were committed before results were seen. Outputs are frozen after first execution — re-run a single analysis with `make stats-<target>`, then `make stats` to rebuild the site.
+
+| Analysis | Makefile target |
+|----------|-------------------|
+| Alpha diversity (Kruskal–Wallis) | `make stats-diversity` |
+| Beta diversity (PERMANOVA × taxonomic level) | `make stats-permanova` |
+| Symptoms × fungal composition (Spearman + PERMANOVA) | `make stats-symptoms` |
+| Nutrients × diversity by disease group (Spearman) | `make stats-nutrients` |
+| Diet + mycobiome PCA / clustering | `make stats-pca` |
+| Evidence-ranking matrix (validation priority) | `make stats-evidence` |
